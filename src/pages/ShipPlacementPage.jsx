@@ -2,18 +2,13 @@ import React, { useState } from "react";
 import { Grid } from "../components/Grid";
 import { ShipPlacementControls } from "../components/ShipPlacementControls";
 import "../styles/ShipPlacementPage.css";
+import { generateAutoPlacement } from "../utils/shipUtils";
 
 export function ShipPlacementPage({ onStartBattle, onBack }) {
     const [ships, setShips] = useState([]);
 
     const handleAutoPlacement = () => {
-        const autoShips = [
-            { cells: [[0, 0], [1, 0], [2, 0]] },
-            { cells: [[4, 2], [4, 3]] },
-            { cells: [[1, 4]] },
-            { cells: [[3, 1]] },
-        ];
-        setShips(autoShips);
+        setShips(generateAutoPlacement());
     };
 
     return (
@@ -23,7 +18,7 @@ export function ShipPlacementPage({ onStartBattle, onBack }) {
             <div className="placement-content">
                 {/* Ліва частина — сітка */}
                 <div className="grid-container">
-                    <Grid ships={ships} />
+                    <Grid ships={ships} showShips={true} isEnemy={false} />
                 </div>
 
                 {/* Права частина — панель управління */}

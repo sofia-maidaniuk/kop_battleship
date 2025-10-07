@@ -1,15 +1,22 @@
 import React from "react";
 import "../styles/Grid.css";
+import { GRID_SIZE, LETTERS } from "../constants/gameConstants";
+import { Cell } from "./Cell.jsx";
 
-const LETTERS = ["А", "Б", "В", "Г", "Д"];
+export function Grid({
+                         ships = [],
+                         onCellClick,
+                         showShips = true,
+                         isEnemy = false,
+                         cellStates = {},
+                     }) {
+    const size = GRID_SIZE;
 
-export function Grid({ ships = [] }) {
-    const size = 5;
-
-    const occupied = new Set(ships.flat());
+    // координати, зайняті кораблями (але показуємо тільки якщо showShips=true)
+    const occupied = new Set(showShips ? ships.flatMap((s) => s.positions) : []);
 
     return (
-        <div className="grid-wrapper">
+        <div className={`grid-wrapper ${isEnemy ? "enemy" : "ally"}`}>
             {/* верхні літери */}
             <div className="letters-row">
                 <div className="corner" />
@@ -18,15 +25,26 @@ export function Grid({ ships = [] }) {
                 ))}
             </div>
 
-            {/* рядки з цифрами + клітинками */}
+            {/* рядки */}
             <div className="grid-area">
                 {Array.from({ length: size }).map((_, r) => (
                     <div key={r} className="row">
                         <div className="label">{r + 1}</div>
                         {Array.from({ length: size }).map((__, c) => {
-                            const coord = `${LETTERS[c]}${r + 1}`; // напр. "В3"
-                            const isShip = occupied.has(coord);
-                            return <div key={coord} className={`cell${isShip ? " ship" : ""}`} />;
+                            const coord = `${LETTERS[c]}${r + 1}`;
+                            const hasShip = occupied.has(coord);
+                            const state = cellStates[coord] ?? "empty";
+
+                            return (
+                                <Cell
+                                    key={coord}
+                                    coord={coord}
+                                    hasShip={hasShip}
+                                    isEnemy={isEnemy}
+                                    state={state}
+                                    onClick={onCellClick}
+                                />
+                            );
                         })}
                     </div>
                 ))}

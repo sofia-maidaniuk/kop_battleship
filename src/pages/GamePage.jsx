@@ -1,22 +1,23 @@
 import React, { useState } from "react";
 import "../styles/GamePage.css";
 import { Grid } from "../components/Grid";
+import { createShip } from "../utils/shipUtils";
 
 export function GamePage({ onSurrender }) {
     const [currentTurn] = useState("player"); // "player" або "enemy"
-    // Флот (тимчасово — статичний)
+
     const myFleet = [
-        ["А5"],
-        ["В4"],
-        ["А2", "Б2", "В2"],
-        ["Д4", "Д5"],
+        createShip(["А5"], "horizontal", 1),
+        createShip(["В4"], "horizontal", 1),
+        createShip(["А2", "Б2", "В2"], "vertical", 3),
+        createShip(["Д4", "Д5"], "horizontal", 2),
     ];
 
     const enemyFleet = [
-        ["Б1"],
-        ["Д3"],
-        ["В5", "Г5", "Д5"],
-        ["А5", "А4"],
+        createShip(["Б1"], "horizontal", 1),
+        createShip(["Д3"], "horizontal", 1),
+        createShip(["В5", "Г5", "Д5"], "horizontal", 3),
+        createShip(["А5", "А4"], "vertical", 2),
     ];
 
     return (
@@ -38,17 +39,18 @@ export function GamePage({ onSurrender }) {
                 </div>
             </div>
 
-
             {/* Ігрові поля */}
             <div className="boards-container">
                 <div className="board-section">
                     <h2>Моє поле</h2>
-                    <Grid ships={myFleet} />
+                    {/* показуємо свої кораблі */}
+                    <Grid ships={myFleet} showShips={true} isEnemy={false} />
                 </div>
 
                 <div className="board-section">
                     <h2>Вороже поле</h2>
-                    <Grid ships={enemyFleet} />
+                    {/* кораблі ворога приховані */}
+                    <Grid ships={enemyFleet} showShips={false} isEnemy={true} />
                 </div>
             </div>
         </div>
