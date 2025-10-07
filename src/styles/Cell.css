@@ -1,0 +1,8 @@
+.cell {
+    background-color: lightblue;
+    border: 1px solid #333;
+    cursor: pointer;
+}
+.cell:hover {
+    background-color: deepskyblue;
+}

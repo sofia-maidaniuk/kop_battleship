@@ -1,0 +1,40 @@
+.grid-wrapper {
+    display: inline-block;
+}
+
+.letters-row {
+    display: grid;
+    grid-template-columns: 30px repeat(5, 50px);
+    margin-bottom: 4px;
+}
+
+.grid-area {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 30px repeat(5, 50px);
+}
+
+.label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #0b3d63;
+}
+
+.cell {
+    width: 50px;
+    height: 50px;
+    background: #bfe1ea;
+    border: 1px solid #2b5468;
+    box-sizing: border-box;
+}
+
+.cell.ship {
+    background: #2f6f98;
+}
