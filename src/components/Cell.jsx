@@ -1,5 +1,5 @@
 import React from "react";
-import "./styles/Cell.css";
+import "../styles/Cell.css";
 import { Ship } from "./Ship";
 
 export function Cell({ ship }) {

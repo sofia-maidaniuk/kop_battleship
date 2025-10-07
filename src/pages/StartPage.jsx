@@ -1,13 +1,13 @@
 import React from "react";
-import "./styles/StartPage.css";
+import "../styles/StartPage.css";
 
-export function StartPage({ onStart }) {
+export function StartPage({ onStart, onShowRules }) {
     return (
-        <div className="start-page">
-            <h1>⚓ Морський бій</h1>
+        <div className="full-page">
+            <h1>Морський бій</h1>
             <div className="buttons">
-                <button onClick={onStart}>Почати гру</button>
-                <button>Правила гри</button>
+                <button className="btn" onClick={onStart}>Почати гру</button>
+                <button className="btn" onClick={onShowRules}>Правила гри</button>
             </div>
         </div>
     );

@@ -1,5 +1,5 @@
 import React from "react";
-import "./styles/Grid.css";
+import "../styles/Grid.css";
 
 const LETTERS = ["А", "Б", "В", "Г", "Д"];
 
