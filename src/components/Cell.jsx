@@ -2,11 +2,15 @@ import React from "react";
 import "../styles/Cell.css";
 
 export const Cell = React.memo(function Cell({
-    coord,
-    hasShip= false,
-    isEnemy = false,
-    state = "empty",
-    onClick, }) {
+                                                 coord,
+                                                 hasShip= false,
+                                                 isEnemy = false,
+                                                 state = "empty",
+                                                 onClick,
+                                                 onMouseEnter,
+                                                 onMouseLeave,
+                                                 extraClass = "", // для стилів прев'ю
+                                             }) {
     // захист від випадкового undefined coord
     if (coord === undefined) return null;
 
@@ -17,6 +21,7 @@ export const Cell = React.memo(function Cell({
         state === "hit" ? "hit" : "",
         state === "miss" ? "miss" : "",
         state === "sunk" ? "sunk" : "",
+        extraClass, // Додаємо клас для прев'ю
     ]
         .filter(Boolean)
         .join(" ");
@@ -25,6 +30,8 @@ export const Cell = React.memo(function Cell({
         <div
             className={className}
             onClick={onClick ? () => onClick(coord) : undefined}
+            onMouseEnter={onMouseEnter} // Викликаємо при наведенні
+            onMouseLeave={onMouseLeave} // Викликаємо при виході
             role={onClick ? "button" : undefined}
             tabIndex={onClick ? 0 : undefined}
             onKeyDown={
