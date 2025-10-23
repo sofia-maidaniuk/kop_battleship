@@ -1,41 +1,43 @@
-import React, { useState } from "react";
+import React from "react";
 import "../styles/GamePage.css";
 import { Grid } from "../components/Grid";
-import { createShip } from "../utils/shipUtils";
 
-export function GamePage({ onSurrender }) {
-    const [currentTurn] = useState("player"); // "player" або "enemy"
+export function GamePage({
+                             onSurrender, //функція переходу
+                             currentTurn, // 'player' або 'enemy'
+                             playerBoard, // { ships, hits } гравця
+                             enemyBoard,  // { ships, hits } ворога
+                             actions // { takeShot }
+                         }) {
+    const isPlayerTurn = currentTurn === 'player';
 
-    const myFleet = [
-        createShip(["А5"], "horizontal", 1),
-        createShip(["В4"], "horizontal", 1),
-        createShip(["А2", "Б2", "В2"], "vertical", 3),
-        createShip(["Д4", "Д5"], "horizontal", 2),
-    ];
-
-    const enemyFleet = [
-        createShip(["Б1"], "horizontal", 1),
-        createShip(["Д3"], "horizontal", 1),
-        createShip(["В5", "Г5", "Д5"], "horizontal", 3),
-        createShip(["А5", "А4"], "vertical", 2),
-    ];
+    // Обробка кліку на ворожому полі
+    const handleEnemyCellClick = (coord) => {
+        // Постріл дозволено лише у свій хід
+        if (!isPlayerTurn) {
+            return;
+        }
+        actions.takeShot(coord, 'player');
+    };
 
     return (
         <div className="game-page full-page">
             <div className="top-bar">
                 <h1>Морський бій</h1>
+                {/* Здається гравець, тому викликаємо onSurrender */}
                 <button className="btn" onClick={onSurrender}>
                     Здатися
                 </button>
             </div>
 
             <div className="turn-indicator">
-                <div className={`player-label ${currentTurn === "player" ? "active" : ""}`}>
-                    Player
+                <div className={`player-label ${isPlayerTurn ? "active" : ""}`}>
+                    Player (Ваш хід)
                 </div>
-                <div className="turn-arrow">➡</div>
-                <div className={`enemy-label ${currentTurn === "enemy" ? "active" : ""}`}>
-                    Enemy
+                <div className={`turn-arrow ${!isPlayerTurn ? "enemy-turn-arrow" : ""}`}>➡</div>
+
+                <div className={`enemy-label ${!isPlayerTurn ? "active" : ""}`}>
+                    Enemy (Хід бота)
                 </div>
             </div>
 
@@ -43,14 +45,26 @@ export function GamePage({ onSurrender }) {
             <div className="boards-container">
                 <div className="board-section">
                     <h2>Моє поле</h2>
-                    {/* показуємо свої кораблі */}
-                    <Grid ships={myFleet} showShips={true} isEnemy={false} />
+                    {/* Моє поле: показуємо кораблі, Hits - від пострілів ворога */}
+                    <Grid
+                        ships={playerBoard.ships}
+                        showShips={true}
+                        isEnemy={false}
+                        cellStates={playerBoard.hits}
+                        onCellClick={undefined} // Своє поле не клікабельне
+                    />
                 </div>
 
                 <div className="board-section">
                     <h2>Вороже поле</h2>
-                    {/* кораблі ворога приховані */}
-                    <Grid ships={enemyFleet} showShips={false} isEnemy={true} />
+                    {/* Вороже поле: кораблі приховані, відображаємо наші постріли */}
+                    <Grid
+                        ships={enemyBoard.ships}
+                        showShips={false} // Кораблі ворога приховані
+                        isEnemy={true}
+                        cellStates={enemyBoard.hits} // Відображаємо наші постріли
+                        onCellClick={handleEnemyCellClick} // Обробка пострілу гравця
+                    />
                 </div>
             </div>
         </div>

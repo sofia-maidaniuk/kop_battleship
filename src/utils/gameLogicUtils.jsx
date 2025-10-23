@@ -88,12 +88,21 @@ export const isPlacementValid = (newShipPositions, existingShips) => {
 
 export const processShot = (coord, ships) => {
     let isHit = false;
+    let sunkShipPositions = []; // для збору клітинок потоплених кораблів
+
     let updatedShips = ships.map(ship => {
         const wasHit = ship.positions.includes(coord) && !ship.hits.includes(coord);
+
         if (wasHit) {
             isHit = true;
             const newHits = [...ship.hits, coord];
             const sunk = newHits.length === ship.positions.length;
+
+            // Якщо корабель потоплений, збираємо всі його позиції
+            if (sunk) {
+                sunkShipPositions = [...sunkShipPositions, ...ship.positions];
+            }
+
             return { ...ship, hits: newHits, isSunk: sunk };
         }
         return ship;
@@ -104,7 +113,8 @@ export const processShot = (coord, ships) => {
     return {
         isHit,
         updatedShips,
-        isSunk: updatedShips.some(s => s.isSunk),
-        allSunk
+        isSunk: sunkShipPositions.length > 0, // Чи був потоплений хоч один корабель цим пострілом
+        allSunk,
+        sunkShipPositions
     };
 };
