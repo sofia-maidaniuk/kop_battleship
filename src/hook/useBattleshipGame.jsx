@@ -1,30 +1,31 @@
-import { useReducer, useMemo, useEffect, useCallback } from 'react';
-import { processShot } from '../utils/gameLogicUtils';
-import { generateAutoPlacement } from '../utils/shipUtils';
-import { GRID_SIZE, LETTERS } from '../constants/gameConstants';
+import { useReducer, useMemo, useEffect, useCallback } from "react";
+import { processShot } from "../utils/gameLogicUtils";
+import { generateAutoPlacement } from "../utils/shipUtils";
+import { useSettings } from "../context/SettingsContext.jsx";
+import { getEnemyShot, resetAIMemory } from "../utils/enemyLogic";
 
 const GamePhase = {
-    START: 'start',
-    PLACEMENT: 'placement',
-    GAME: 'game',
-    RESULT: 'result',
-    RULES: 'rules'
+    START: "start",
+    SETTINGS: "settings",
+    PLACEMENT: "placement",
+    GAME: "game",
+    RESULT: "result",
+    RULES: "rules",
 };
 
 const initialBoardState = {
     ships: [],
-    hits: {}, //стан клітинок
+    hits: {},
 };
 
-// Ворожий флот генерується лише раз при ініціалізації
 const generateInitialEnemyBoard = () => ({
     ...initialBoardState,
-    ships: generateAutoPlacement()
+    ships: generateAutoPlacement(),
 });
 
 const initialState = {
     phase: GamePhase.START,
-    currentTurn: 'player', // 'player' або 'enemy'
+    currentTurn: "player",
     playerBoard: initialBoardState,
     enemyBoard: generateInitialEnemyBoard(),
     winner: null,
@@ -33,70 +34,76 @@ const initialState = {
 // REDUCER
 function gameReducer(state, action) {
     switch (action.type) {
-        case 'SET_PHASE':
+        case "SET_PHASE":
             return { ...state, phase: action.payload };
 
-        case 'RESTART_GAME':
-            // Скидаємо все, включаючи нову рандомну генерацію для ворога
-            return { ...initialState, enemyBoard: { ...initialBoardState, ships: generateAutoPlacement() } };
+        case "RESTART_GAME":
+            // Скидаємо пам’ять бота при новій грі
+            resetAIMemory();
+            return {
+                ...initialState,
+                enemyBoard: { ...initialBoardState, ships: generateAutoPlacement() },
+            };
 
-        case 'START_GAME_WITH_SHIPS':
-            // Гравець передає свої розміщені кораблі
+        case "START_GAME_WITH_SHIPS":
+            // Скидаємо пам’ять бота при старті бою
+            resetAIMemory();
             return {
                 ...state,
                 phase: GamePhase.GAME,
                 playerBoard: { ...state.playerBoard, ships: action.payload },
             };
 
-        case 'TAKE_SHOT': {
+        case "TAKE_SHOT": {
             const { coord, shooter } = action.payload;
-            const target = shooter === 'player' ? 'enemy' : 'player';
-
-            const targetBoardKey = target === 'enemy' ? 'enemyBoard' : 'playerBoard';
+            const target = shooter === "player" ? "enemy" : "player";
+            const targetBoardKey = target === "enemy" ? "enemyBoard" : "playerBoard";
             const targetBoard = state[targetBoardKey];
 
-            if (targetBoard.hits[coord]) return state;
+            if (coord && targetBoard.hits[coord]) return state; // не стріляємо двічі
 
-            const shotResult = processShot(coord, targetBoard.ships);
+            const shotResult = coord ? processShot(coord, targetBoard.ships) : { isHit: false };
 
-            // Створюємо новий об'єкт hits на основі попередніх
-            let newHits = { ...targetBoard.hits };
+            const newHits = { ...targetBoard.hits };
+            if (coord) {
+                const hitState = shotResult.isHit ? "hit" : "miss";
+                newHits[coord] = hitState;
 
-            // Маркуємо клітинку поточного пострілу як 'hit' або 'miss'
-            const hitState = shotResult.isHit ? 'hit' : 'miss';
-            newHits[coord] = hitState;
-
-            // Якщо корабель потоплений, маркуємо УСІ його клітинки як 'sunk'
-            if (shotResult.sunkShipPositions && shotResult.sunkShipPositions.length > 0) {
-                shotResult.sunkShipPositions.forEach(pos => {
-                    newHits[pos] = 'sunk';
-                });
+                if (shotResult.sunkShipPositions?.length) {
+                    shotResult.sunkShipPositions.forEach((pos) => {
+                        newHits[pos] = "sunk";
+                    });
+                }
             }
 
             const newBoard = {
-                ships: shotResult.updatedShips,
-                hits: newHits
+                ships: shotResult.updatedShips || targetBoard.ships,
+                hits: newHits,
             };
 
             const nextState = {
                 ...state,
                 [targetBoardKey]: newBoard,
-                currentTurn: shotResult.isHit ? shooter : (shooter === 'player' ? 'enemy' : 'player'),
+                currentTurn: shotResult.isHit
+                    ? shooter
+                    : shooter === "player"
+                        ? "enemy"
+                        : "player",
                 winner: shotResult.allSunk ? shooter : null,
             };
 
-            if (shotResult.allSunk) {
-                nextState.phase = GamePhase.RESULT;
-            }
-
+            if (shotResult.allSunk) nextState.phase = GamePhase.RESULT;
             return nextState;
         }
 
-        case 'SURRENDER':
+        case "END_PLAYER_TURN":
+            return { ...state, currentTurn: "enemy" };
+
+        case "SURRENDER":
             return {
                 ...state,
                 phase: GamePhase.RESULT,
-                winner: action.payload === 'player' ? 'enemy' : 'player',
+                winner: action.payload === "player" ? "enemy" : "player",
             };
 
         default:
@@ -106,53 +113,51 @@ function gameReducer(state, action) {
 
 export function useBattleshipGame() {
     const [state, dispatch] = useReducer(gameReducer, initialState);
+    const { settings } = useSettings();
 
-    // Створюємо takeShot як useCallback, щоб він був стабільним для useEffect
-    const takeShot = useCallback((coord, shooter = 'player') => {
-        dispatch({ type: 'TAKE_SHOT', payload: { coord, shooter } });
+    // постріл
+    const takeShot = useCallback((coord, shooter = "player") => {
+        dispatch({ type: "TAKE_SHOT", payload: { coord, shooter } });
     }, []);
 
-    // Простий рандомний постріл бота (поки що)
+    // логіка бота
     useEffect(() => {
-        if (state.phase === GamePhase.GAME && state.currentTurn === 'enemy' && state.winner === null) {
-            const timer = setTimeout(() => {
-                const alreadyShot = Object.keys(state.playerBoard.hits);
-                const possibleShots = [];
+        if (state.phase !== GamePhase.GAME || state.currentTurn !== "enemy" || state.winner)
+            return;
 
-                // Генеруємо всі можливі клітинки, які ще не були обстріляні
-                for(let c = 0; c < GRID_SIZE; c++) {
-                    for(let r = 1; r <= GRID_SIZE; r++) {
-                        const coord = `${LETTERS[c]}${r}`;
-                        if (!alreadyShot.includes(coord)) {
-                            possibleShots.push(coord);
-                        }
-                    }
-                }
+        const timer = setTimeout(() => {
+            const enemyShotCoord = getEnemyShot(state.playerBoard, settings.aiMode);
+            if (enemyShotCoord) {
+                takeShot(enemyShotCoord, "enemy");
+            }
+        }, settings.enemyDelay || 1000);
 
-                if (possibleShots.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * possibleShots.length);
-                    const enemyShotCoord = possibleShots[randomIndex];
-
-                    // Бот стріляє
-                    takeShot(enemyShotCoord, 'enemy');
-                }
-            }, 1000); // Затримка 1 секунда для кращого UX
-
-            return () => clearTimeout(timer);
-        }
-    }, [state.phase, state.currentTurn, state.playerBoard.hits, takeShot]);
-
-
-    // Експортуємо всі функції-дії (actions)
-    const actions = useMemo(() => ({
+        return () => clearTimeout(timer);
+    }, [
+        state.phase,
+        state.currentTurn,
+        state.playerBoard.hits,
+        state.winner,
         takeShot,
-        startGame: (playerShips) => dispatch({ type: 'START_GAME_WITH_SHIPS', payload: playerShips }),
-        startPlacement: () => dispatch({ type: 'SET_PHASE', payload: 'placement' }),
-        showRules: () => dispatch({ type: 'SET_PHASE', payload: 'rules' }),
-        hideRules: () => dispatch({ type: 'SET_PHASE', payload: 'start' }),
-        surrender: () => dispatch({ type: 'SURRENDER', payload: 'player' }),
-        restartGame: () => dispatch({ type: 'RESTART_GAME' }),
-    }), [takeShot]);
+        settings,
+    ]);
+
+    // експорт дій
+    const actions = useMemo(
+        () => ({
+            takeShot,
+            startGame: (playerShips) =>
+                dispatch({ type: "START_GAME_WITH_SHIPS", payload: playerShips }),
+            startPlacement: () => dispatch({ type: "SET_PHASE", payload: "placement" }),
+            showRules: () => dispatch({ type: "SET_PHASE", payload: "rules" }),
+            hideRules: () => dispatch({ type: "SET_PHASE", payload: "start" }),
+            openSettings: () => dispatch({ type: "SET_PHASE", payload: "settings" }),
+            surrender: () => dispatch({ type: "SURRENDER", payload: "player" }),
+            restartGame: () => dispatch({ type: "RESTART_GAME" }),
+            endPlayerTurn: () => dispatch({ type: "END_PLAYER_TURN" }),
+        }),
+        [takeShot]
+    );
 
     return [state, actions, GamePhase];
 }

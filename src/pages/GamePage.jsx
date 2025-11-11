@@ -1,6 +1,8 @@
 import React from "react";
 import "../styles/GamePage.css";
 import { Grid } from "../components/Grid";
+import { useSettings } from "../context/SettingsContext";
+import { useGameTimers } from "../hook/useGameTimers"; //
 
 export function GamePage({
                              onSurrender, //функція переходу
@@ -9,25 +11,39 @@ export function GamePage({
                              enemyBoard,  // { ships, hits } ворога
                              actions // { takeShot }
                          }) {
-    const isPlayerTurn = currentTurn === 'player';
+    const isPlayerTurn = currentTurn === "player";
+    const { settings } = useSettings();
+
+    // Використовуємо кастомний хук для таймерів
+    const { formatTotalTime, formatTurnTime } = useGameTimers(currentTurn, actions, settings);
 
     // Обробка кліку на ворожому полі
     const handleEnemyCellClick = (coord) => {
-        // Постріл дозволено лише у свій хід
-        if (!isPlayerTurn) {
-            return;
-        }
-        actions.takeShot(coord, 'player');
+        if (!isPlayerTurn) return;
+
+        // Не дозволяємо повторний клік у вже обстріляну клітинку
+        if (enemyBoard.hits[coord]) return;
+
+        actions.takeShot(coord, "player");
+        // Таймер автоматично скинеться у хукy useGameTimers
     };
 
     return (
         <div className="game-page full-page">
             <div className="top-bar">
                 <h1>Морський бій</h1>
-                {/* Здається гравець, тому викликаємо onSurrender */}
                 <button className="btn" onClick={onSurrender}>
                     Здатися
                 </button>
+            </div>
+
+            <div className="time-panel">
+                <div className="total-timer">
+                    Загальний час: <strong>{formatTotalTime}</strong>
+                </div>
+                <div className="turn-timer">
+                    Час на хід: <strong>{formatTurnTime}</strong>
+                </div>
             </div>
 
             <div className="turn-indicator">
@@ -35,35 +51,30 @@ export function GamePage({
                     Player (Ваш хід)
                 </div>
                 <div className={`turn-arrow ${!isPlayerTurn ? "enemy-turn-arrow" : ""}`}>➡</div>
-
                 <div className={`enemy-label ${!isPlayerTurn ? "active" : ""}`}>
                     Enemy (Хід бота)
                 </div>
             </div>
 
-            {/* Ігрові поля */}
             <div className="boards-container">
                 <div className="board-section">
                     <h2>Моє поле</h2>
-                    {/* Моє поле: показуємо кораблі, Hits - від пострілів ворога */}
                     <Grid
                         ships={playerBoard.ships}
                         showShips={true}
                         isEnemy={false}
                         cellStates={playerBoard.hits}
-                        onCellClick={undefined} // Своє поле не клікабельне
                     />
                 </div>
 
                 <div className="board-section">
                     <h2>Вороже поле</h2>
-                    {/* Вороже поле: кораблі приховані, відображаємо наші постріли */}
                     <Grid
                         ships={enemyBoard.ships}
-                        showShips={false} // Кораблі ворога приховані
+                        showShips={false}
                         isEnemy={true}
-                        cellStates={enemyBoard.hits} // Відображаємо наші постріли
-                        onCellClick={handleEnemyCellClick} // Обробка пострілу гравця
+                        cellStates={enemyBoard.hits}
+                        onCellClick={handleEnemyCellClick}
                     />
                 </div>
             </div>

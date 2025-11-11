@@ -1,54 +1,61 @@
 import React from "react";
-// Імпортуємо головний хук та всі компоненти сторінок
 import { useBattleshipGame } from '../src/hook/useBattleshipGame.jsx';
 import { StartPage } from "./pages/StartPage";
+import { SettingsPage } from "./pages/SettingsPage";
 import { GamePage } from "./pages/GamePage";
 import { ShipPlacementPage } from "./pages/ShipPlacementPage";
 import { RulesPage } from "./pages/RulesPage";
 import { ResultPage } from "./pages/ResultPage";
 
 function App() {
-    // ВИКОРИСТАННЯ ГЛОБАЛЬНОГО СТАНУ (useReducer)
-    // state: містить phase, currentTurn, playerBoard, enemyBoard, winner
-    // actions: містить takeShot, startGame, surrender, startPlacement, etc.
     const [state, actions, GamePhase] = useBattleshipGame();
 
-    // Об'єднання функцій навігації для чистої передачі дочірнім елементам
     const navActions = {
-        onStart: actions.startPlacement,       // START -> PLACEMENT
-        onShowRules: actions.showRules,        // START -> RULES
-        onBack: actions.hideRules,             // RULES -> START
-        onSurrender: actions.surrender,        // GAME -> RESULT
-        onBackToStart: actions.restartGame,    // RESULT -> START (зі скиданням стану)
+        onStart: actions.openSettings,          // START SETTINGS
+        onShowRules: actions.showRules,         // START RULES
+        onBack: actions.hideRules,              // RULES START
+        onSurrender: actions.surrender,         // GAME RESULT
+        onBackToStart: actions.restartGame,     // RESULT START
     };
 
     let Content;
 
-    // РОУТИНГ НА ОСНОВІ ФАЗИ ГРИ (state.phase)
     switch (state.phase) {
         case GamePhase.START:
-            Content = <StartPage onStart={navActions.onStart} onShowRules={navActions.onShowRules} />;
+            Content = (
+                <StartPage
+                    onStart={navActions.onStart}
+                    onShowRules={navActions.onShowRules}
+                />
+            );
+            break;
+
+        case GamePhase.SETTINGS:
+            Content = (
+                <SettingsPage
+                    onStart={() => actions.startPlacement()} // після вибору рівня розстановка кораблів
+                    onBack={() => actions.hideRules()}
+                />
+            );
             break;
 
         case GamePhase.PLACEMENT:
             Content = (
                 <ShipPlacementPage
-                    // Передаємо кораблі, які були розміщені користувачем, у центральний хук
                     onStartBattle={(ships) => actions.startGame(ships)}
-                    onBack={navActions.onBackToStart}
+                    onBack={() => actions.openSettings()}
                 />
             );
             break;
 
         case GamePhase.GAME:
-            // Передаємо GamePage лише необхідні props (
             Content = (
                 <GamePage
                     onSurrender={navActions.onSurrender}
                     currentTurn={state.currentTurn}
                     playerBoard={state.playerBoard}
                     enemyBoard={state.enemyBoard}
-                    actions={actions} // { takeShot }
+                    actions={actions}
                 />
             );
             break;
@@ -61,7 +68,7 @@ function App() {
             Content = (
                 <ResultPage
                     onBackToStart={navActions.onBackToStart}
-                    winner={state.winner} // Передаємо переможця
+                    winner={state.winner}
                 />
             );
             break;
