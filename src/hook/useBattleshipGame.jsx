@@ -1,103 +1,176 @@
-import { useReducer, useMemo, useEffect, useCallback } from 'react';
-import { processShot } from '../utils/gameLogicUtils';
-import { generateAutoPlacement } from '../utils/shipUtils';
-import { GRID_SIZE, LETTERS } from '../constants/gameConstants';
+import { useReducer, useMemo, useEffect, useCallback, useState } from "react";
+import { processShot } from "../utils/gameLogicUtils";
+import { generateAutoPlacement } from "../utils/shipUtils";
+import { useSettings } from "../context/SettingsContext.jsx";
+import { getEnemyShot, resetAIMemory } from "../utils/enemyLogic";
 
 const GamePhase = {
-    START: 'start',
-    PLACEMENT: 'placement',
-    GAME: 'game',
-    RESULT: 'result',
-    RULES: 'rules'
+    START: "start",
+    SETTINGS: "settings",
+    PLACEMENT: "placement",
+    GAME: "game",
+    RESULT: "result",
+    RULES: "rules",
 };
 
 const initialBoardState = {
     ships: [],
-    hits: {}, //стан клітинок
+    hits: {},
 };
 
-// Ворожий флот генерується лише раз при ініціалізації
+// Глибоке клонування простих структур
+const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
+
+// Скидання службових станів корабля до "чистого"
+const resetShipState = (s) => ({
+    ...s,
+    hits: Array.isArray(s.hits) ? [] : [],
+    isSunk: false,
+    sunk: false,
+});
+
+// Нормалізація масиву кораблів: кожному гарантуємо правильні поля
+const normalizeShips = (ships) => (ships || []).map((s) => resetShipState(s));
+
 const generateInitialEnemyBoard = () => ({
     ...initialBoardState,
-    ships: generateAutoPlacement()
+    ships: normalizeShips(generateAutoPlacement()),
 });
 
 const initialState = {
     phase: GamePhase.START,
-    currentTurn: 'player', // 'player' або 'enemy'
+    currentTurn: "player",
     playerBoard: initialBoardState,
     enemyBoard: generateInitialEnemyBoard(),
     winner: null,
+    score: { wins: 0, losses: 0 },
+    baselinePlayerShips: null, // базова розкладка гравця для "Почати заново"
 };
 
 // REDUCER
 function gameReducer(state, action) {
     switch (action.type) {
-        case 'SET_PHASE':
+        case "SET_PHASE":
             return { ...state, phase: action.payload };
 
-        case 'RESTART_GAME':
-            // Скидаємо все, включаючи нову рандомну генерацію для ворога
-            return { ...initialState, enemyBoard: { ...initialBoardState, ships: generateAutoPlacement() } };
+        case "SET_SCORE":
+            return { ...state, score: action.payload };
 
-        case 'START_GAME_WITH_SHIPS':
-            // Гравець передає свої розміщені кораблі
+        // Почати заново : залишає ті ж кораблі гравця (чиста копія), ворогу — нові
+        case "RESTART_GAME": {
+            resetAIMemory();
+
+            const sourceShips =
+                state.baselinePlayerShips && state.baselinePlayerShips.length
+                    ? state.baselinePlayerShips
+                    : state.playerBoard.ships;
+
             return {
                 ...state,
                 phase: GamePhase.GAME,
-                playerBoard: { ...state.playerBoard, ships: action.payload },
+                currentTurn: "player",
+                playerBoard: {
+                    ships: normalizeShips(deepClone(sourceShips)),
+                    hits: {},
+                },
+                enemyBoard: {
+                    ...initialBoardState,
+                    ships: normalizeShips(generateAutoPlacement()),
+                },
+                winner: null,
+                score: state.score,
             };
+        }
 
-        case 'TAKE_SHOT': {
+        // Початок гри після розстановки кораблів, фіксуємо еталонну розкладку
+        case "START_GAME_WITH_SHIPS": {
+            resetAIMemory();
+            const cleanShips = normalizeShips(deepClone(action.payload));
+
+            return {
+                ...state,
+                phase: GamePhase.GAME,
+                playerBoard: { ships: deepClone(cleanShips), hits: {} },
+                enemyBoard: { ...initialBoardState, ships: normalizeShips(generateAutoPlacement()) },
+                winner: null,
+                baselinePlayerShips: deepClone(cleanShips),
+            };
+        }
+
+        // Обробка пострілу
+        case "TAKE_SHOT": {
             const { coord, shooter } = action.payload;
-            const target = shooter === 'player' ? 'enemy' : 'player';
-
-            const targetBoardKey = target === 'enemy' ? 'enemyBoard' : 'playerBoard';
+            const target = shooter === "player" ? "enemy" : "player";
+            const targetBoardKey = target === "enemy" ? "enemyBoard" : "playerBoard";
             const targetBoard = state[targetBoardKey];
 
-            if (targetBoard.hits[coord]) return state;
+            if (coord && targetBoard.hits[coord]) return state; // не стріляємо двічі в те саме
 
-            const shotResult = processShot(coord, targetBoard.ships);
+            const shotResult = coord ? processShot(coord, targetBoard.ships) : { isHit: false };
 
-            // Створюємо новий об'єкт hits на основі попередніх
-            let newHits = { ...targetBoard.hits };
+            const newHits = { ...targetBoard.hits };
+            if (coord) {
+                const hitState = shotResult.isHit ? "hit" : "miss";
+                newHits[coord] = hitState;
 
-            // Маркуємо клітинку поточного пострілу як 'hit' або 'miss'
-            const hitState = shotResult.isHit ? 'hit' : 'miss';
-            newHits[coord] = hitState;
-
-            // Якщо корабель потоплений, маркуємо УСІ його клітинки як 'sunk'
-            if (shotResult.sunkShipPositions && shotResult.sunkShipPositions.length > 0) {
-                shotResult.sunkShipPositions.forEach(pos => {
-                    newHits[pos] = 'sunk';
-                });
+                if (shotResult.sunkShipPositions?.length) {
+                    shotResult.sunkShipPositions.forEach((pos) => {
+                        newHits[pos] = "sunk";
+                    });
+                }
             }
 
             const newBoard = {
-                ships: shotResult.updatedShips,
-                hits: newHits
+                ships: shotResult.updatedShips || targetBoard.ships,
+                hits: newHits,
             };
 
             const nextState = {
                 ...state,
                 [targetBoardKey]: newBoard,
-                currentTurn: shotResult.isHit ? shooter : (shooter === 'player' ? 'enemy' : 'player'),
-                winner: shotResult.allSunk ? shooter : null,
+                currentTurn: shotResult.isHit
+                    ? shooter
+                    : shooter === "player"
+                        ? "enemy"
+                        : "player",
+                winner: shotResult.allSunk ? shooter : state.winner,
             };
-
-            if (shotResult.allSunk) {
-                nextState.phase = GamePhase.RESULT;
-            }
 
             return nextState;
         }
 
-        case 'SURRENDER':
+        case "INCREMENT_WIN": {
+            const updated = { ...state.score, wins: state.score.wins + 1 };
+            localStorage.setItem("battleship-score", JSON.stringify(updated));
+            return { ...state, score: updated };
+        }
+
+        case "INCREMENT_LOSS": {
+            const updated = { ...state.score, losses: state.score.losses + 1 };
+            localStorage.setItem("battleship-score", JSON.stringify(updated));
+            return { ...state, score: updated };
+        }
+
+        // Наступний тур, повернення на етап розстановки кораблів
+        case "NEXT_ROUND":
+            resetAIMemory();
             return {
                 ...state,
-                phase: GamePhase.RESULT,
-                winner: action.payload === 'player' ? 'enemy' : 'player',
+                phase: GamePhase.PLACEMENT,
+                currentTurn: "player",
+                winner: null,
             };
+
+        // Обнулення рахунку
+        case "RESET_SCORE":
+            localStorage.removeItem("battleship-score");
+            return { ...state, score: { wins: 0, losses: 0 } };
+
+        case "END_PLAYER_TURN":
+            return { ...state, currentTurn: "enemy" };
+
+        case "SURRENDER":
+            return { ...state, winner: "enemy" };
 
         default:
             return state;
@@ -106,53 +179,90 @@ function gameReducer(state, action) {
 
 export function useBattleshipGame() {
     const [state, dispatch] = useReducer(gameReducer, initialState);
+    const { settings } = useSettings();
 
-    // Створюємо takeShot як useCallback, щоб він був стабільним для useEffect
-    const takeShot = useCallback((coord, shooter = 'player') => {
-        dispatch({ type: 'TAKE_SHOT', payload: { coord, shooter } });
+    // Флаг, щоб рахунок оновився рівно один раз за раунд
+    const [scoreUpdated, setScoreUpdated] = useState(false);
+
+    // Зчитуємо рахунок із localStorage
+    useEffect(() => {
+        const savedScore = localStorage.getItem("battleship-score");
+        if (savedScore) {
+            try {
+                const parsed = JSON.parse(savedScore);
+                dispatch({ type: "SET_SCORE", payload: parsed });
+            } catch {
+                console.warn("Invalid score data in storage");
+            }
+        }
     }, []);
 
-    // Простий рандомний постріл бота (поки що)
+    // Постріл
+    const takeShot = useCallback((coord, shooter = "player") => {
+        dispatch({ type: "TAKE_SHOT", payload: { coord, shooter } });
+    }, []);
+
+    // логіка бота
     useEffect(() => {
-        if (state.phase === GamePhase.GAME && state.currentTurn === 'enemy' && state.winner === null) {
-            const timer = setTimeout(() => {
-                const alreadyShot = Object.keys(state.playerBoard.hits);
-                const possibleShots = [];
+        if (state.phase !== GamePhase.GAME || state.currentTurn !== "enemy" || state.winner)
+            return;
 
-                // Генеруємо всі можливі клітинки, які ще не були обстріляні
-                for(let c = 0; c < GRID_SIZE; c++) {
-                    for(let r = 1; r <= GRID_SIZE; r++) {
-                        const coord = `${LETTERS[c]}${r}`;
-                        if (!alreadyShot.includes(coord)) {
-                            possibleShots.push(coord);
-                        }
-                    }
-                }
+        const timer = setTimeout(() => {
+            const enemyShotCoord = getEnemyShot(state.playerBoard, settings.aiMode);
+            if (enemyShotCoord) {
+                takeShot(enemyShotCoord, "enemy");
+            }
+        }, settings.enemyDelay || 1000);
 
-                if (possibleShots.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * possibleShots.length);
-                    const enemyShotCoord = possibleShots[randomIndex];
-
-                    // Бот стріляє
-                    takeShot(enemyShotCoord, 'enemy');
-                }
-            }, 1000); // Затримка 1 секунда для кращого UX
-
-            return () => clearTimeout(timer);
-        }
-    }, [state.phase, state.currentTurn, state.playerBoard.hits, takeShot]);
-
-
-    // Експортуємо всі функції-дії (actions)
-    const actions = useMemo(() => ({
+        return () => clearTimeout(timer);
+    }, [
+        state.phase,
+        state.currentTurn,
+        state.playerBoard.hits,
+        state.winner,
         takeShot,
-        startGame: (playerShips) => dispatch({ type: 'START_GAME_WITH_SHIPS', payload: playerShips }),
-        startPlacement: () => dispatch({ type: 'SET_PHASE', payload: 'placement' }),
-        showRules: () => dispatch({ type: 'SET_PHASE', payload: 'rules' }),
-        hideRules: () => dispatch({ type: 'SET_PHASE', payload: 'start' }),
-        surrender: () => dispatch({ type: 'SURRENDER', payload: 'player' }),
-        restartGame: () => dispatch({ type: 'RESTART_GAME' }),
-    }), [takeShot]);
+        settings,
+    ]);
+
+    // Автоматично оновити рахунок один раз після визначення переможця
+    useEffect(() => {
+        if (state.winner && !scoreUpdated) {
+            if (state.winner === "player") {
+                dispatch({ type: "INCREMENT_WIN" });
+            } else if (state.winner === "enemy") {
+                dispatch({ type: "INCREMENT_LOSS" });
+            }
+            setScoreUpdated(true);
+        }
+        // Скинути флаг при старті нового туру (коли winner зник)
+        if (!state.winner && scoreUpdated) {
+            setScoreUpdated(false);
+        }
+    }, [state.winner, scoreUpdated]);
+
+    // Експорт дій
+    const actions = useMemo(
+        () => ({
+            takeShot,
+            startGame: (playerShips) =>
+                dispatch({ type: "START_GAME_WITH_SHIPS", payload: playerShips }),
+            startPlacement: () => dispatch({ type: "SET_PHASE", payload: "placement" }),
+            showRules: () => dispatch({ type: "SET_PHASE", payload: "rules" }),
+            hideRules: () => dispatch({ type: "SET_PHASE", payload: "start" }),
+            openSettings: () => dispatch({ type: "SET_PHASE", payload: "settings" }),
+
+            // Здатися: тільки фіксує переможця, рахунок додасть useEffect
+            surrender: () => {
+                dispatch({ type: "SURRENDER", payload: "player" });
+            },
+
+            restartGame: () => dispatch({ type: "RESTART_GAME" }),
+            nextRound: () => dispatch({ type: "NEXT_ROUND" }),
+            endPlayerTurn: () => dispatch({ type: "END_PLAYER_TURN" }),
+            resetScore: () => dispatch({ type: "RESET_SCORE" }),
+        }),
+        [takeShot]
+    );
 
     return [state, actions, GamePhase];
 }

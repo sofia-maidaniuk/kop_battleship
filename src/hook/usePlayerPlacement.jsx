@@ -1,6 +1,3 @@
-// ===================================
-// Файл: src/hooks/usePlayerPlacement.jsx (ФІНАЛЬНА ВЕРСІЯ З ЛОГІКОЮ ПЕРЕМИКАННЯ)
-// ===================================
 import { useState, useMemo, useCallback } from 'react';
 import { getShipPositions, isPlacementValid } from '../utils/gameLogicUtils';
 import { createShip } from '../utils/shipUtils';

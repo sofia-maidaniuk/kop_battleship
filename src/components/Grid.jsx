@@ -61,7 +61,7 @@ export function Grid({
                             );
                         })}
                     </div>
-                ))}\
+                ))}
             </div>
         </div>
     );
