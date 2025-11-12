@@ -1,11 +1,10 @@
 import React from "react";
-import { useBattleshipGame } from '../src/hook/useBattleshipGame.jsx';
+import { useBattleshipGame } from "../src/hook/useBattleshipGame.jsx";
 import { StartPage } from "./pages/StartPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { GamePage } from "./pages/GamePage";
 import { ShipPlacementPage } from "./pages/ShipPlacementPage";
 import { RulesPage } from "./pages/RulesPage";
-import { ResultPage } from "./pages/ResultPage";
 
 function App() {
     const [state, actions, GamePhase] = useBattleshipGame();
@@ -56,6 +55,8 @@ function App() {
                     playerBoard={state.playerBoard}
                     enemyBoard={state.enemyBoard}
                     actions={actions}
+                    winner={state.winner}
+                    score={state.score}
                 />
             );
             break;
@@ -64,25 +65,12 @@ function App() {
             Content = <RulesPage onBack={navActions.onBack} />;
             break;
 
-        case GamePhase.RESULT:
-            Content = (
-                <ResultPage
-                    onBackToStart={navActions.onBackToStart}
-                    winner={state.winner}
-                />
-            );
-            break;
-
         default:
             Content = <StartPage {...navActions} />;
             break;
     }
 
-    return (
-        <div className="app-container">
-            {Content}
-        </div>
-    );
+    return <div className="app-container">{Content}</div>;
 }
 
 export default App;

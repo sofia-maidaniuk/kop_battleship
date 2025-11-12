@@ -2,30 +2,26 @@ import React from "react";
 import "../styles/GamePage.css";
 import { Grid } from "../components/Grid";
 import { useSettings } from "../context/SettingsContext";
-import { useGameTimers } from "../hook/useGameTimers"; //
+import { useGameTimers } from "../hook/useGameTimers";
+import { ResultModal } from "../components/ResultModal";
 
 export function GamePage({
                              onSurrender, //функція переходу
                              currentTurn, // 'player' або 'enemy'
                              playerBoard, // { ships, hits } гравця
                              enemyBoard,  // { ships, hits } ворога
-                             actions // { takeShot }
+                             actions,// { takeShot }
+                             winner,
+                             score
                          }) {
     const isPlayerTurn = currentTurn === "player";
     const { settings } = useSettings();
-
-    // Використовуємо кастомний хук для таймерів
     const { formatTotalTime, formatTurnTime } = useGameTimers(currentTurn, actions, settings);
 
-    // Обробка кліку на ворожому полі
     const handleEnemyCellClick = (coord) => {
         if (!isPlayerTurn) return;
-
-        // Не дозволяємо повторний клік у вже обстріляну клітинку
         if (enemyBoard.hits[coord]) return;
-
         actions.takeShot(coord, "player");
-        // Таймер автоматично скинеться у хукy useGameTimers
     };
 
     return (
@@ -78,6 +74,21 @@ export function GamePage({
                     />
                 </div>
             </div>
+
+            <ResultModal
+                winner={winner}
+                score={score}
+                onRestart={() => {
+                    actions.restartGame();
+                }}
+                onNextRound={() => {
+                    actions.nextRound();
+                }}
+                onExit={() => {
+                    actions.resetScore();
+                    actions.hideRules();
+                }}
+            />
         </div>
     );
 }
