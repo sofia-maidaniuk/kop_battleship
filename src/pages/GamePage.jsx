@@ -1,5 +1,5 @@
 import React from "react";
-import "../styles/GamePage.css";
+import "./GamePage.css";
 import { Grid } from "../components/Grid";
 import { useSettings } from "../context/SettingsContext";
 import { useGameTimers } from "../hook/useGameTimers";

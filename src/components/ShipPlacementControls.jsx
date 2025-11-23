@@ -1,5 +1,5 @@
 import React from "react";
-import "../styles/ShipPlacementControls.css";
+import "./ShipPlacementControls.css";
 import { SHIP_TYPES } from "../constants/gameConstants";
 
 // Компонент тепер приймає всю логіку з хука через props

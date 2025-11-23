@@ -1,5 +1,5 @@
 import ReactDOM from "react-dom";
-import "../styles/ResultModal.css";
+import "./ResultModal.css";
 
 export function ResultModal({ winner, score = { wins: 0, losses: 0 }, onRestart, onNextRound, onExit }) {
     if (!winner) return null;

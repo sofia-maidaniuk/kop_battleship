@@ -3,7 +3,7 @@ import { useSettings } from "../context/SettingsContext";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import "../styles/SettingsPage.css";
+import "./SettingsPage.css";
 
 // Схема валідації
 const schema = yup.object().shape({

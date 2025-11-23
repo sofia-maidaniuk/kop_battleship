@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Grid } from "../components/Grid";
 import { ShipPlacementControls } from "../components/ShipPlacementControls";
-import "../styles/ShipPlacementPage.css";
+import "./ShipPlacementPage.css";
 import { generateAutoPlacement } from "../utils/shipUtils";
 import { usePlayerPlacement } from "../hook/usePlayerPlacement";
 

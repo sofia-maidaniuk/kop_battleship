@@ -1,5 +1,5 @@
 import React from "react";
-import "../styles/StartPage.css";
+import "./StartPage.css";
 
 export function StartPage({ onStart, onShowRules }) {
     return (

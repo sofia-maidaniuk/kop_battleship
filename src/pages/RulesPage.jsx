@@ -1,5 +1,5 @@
 import React from "react";
-import "../styles/RulesPage.css";
+import "./RulesPage.css";
 
 export function RulesPage({ onBack }) {
     return (

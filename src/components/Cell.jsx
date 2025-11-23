@@ -1,5 +1,5 @@
 import React from "react";
-import "../styles/Cell.css";
+import "./Cell.css";
 
 export const Cell = React.memo(function Cell({
                                                  coord,

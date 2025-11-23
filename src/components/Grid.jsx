@@ -1,5 +1,5 @@
 import React from "react";
-import "../styles/Grid.css";
+import "./Grid.css";
 import { GRID_SIZE, LETTERS } from "../constants/gameConstants";
 import { Cell } from "./Cell.jsx";
 
