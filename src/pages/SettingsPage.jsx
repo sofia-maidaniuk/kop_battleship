@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import "./SettingsPage.css";
+import { useNavigate, useParams } from "react-router-dom";
 
 // Схема валідації
 const schema = yup.object().shape({
@@ -13,8 +14,10 @@ const schema = yup.object().shape({
         .required("Рівень складності обов’язковий"),
 });
 
-export function SettingsPage({ onStart, onBack }) {
+export function SettingsPage({ onStart }) {
     const { settings, updateSettings } = useSettings();
+    const navigate = useNavigate();
+    const { userId } = useParams();
 
     // Ініціалізація форми
     const {
@@ -34,7 +37,10 @@ export function SettingsPage({ onStart, onBack }) {
     // Обробка сабміту
     const onSubmit = (data) => {
         updateSettings({ ...settings, difficulty: data.difficulty });
-        if (onStart) onStart();
+
+        if (onStart) onStart(); // логіка гри (зміна фази)
+
+        navigate(`/user/${userId}/placement`);
     };
 
     return (
@@ -92,10 +98,11 @@ export function SettingsPage({ onStart, onBack }) {
                     <button
                         type="button"
                         className="btn btn-secondary"
-                        onClick={onBack}
+                        onClick={() => navigate(`/user/${userId}/start`)}
                     >
                         Назад
                     </button>
+
                     <button type="submit" className="btn btn-primary">
                         Почати гру
                     </button>

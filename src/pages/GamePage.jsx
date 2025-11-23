@@ -4,19 +4,27 @@ import { Grid } from "../components/Grid";
 import { useSettings } from "../context/SettingsContext";
 import { useGameTimers } from "../hook/useGameTimers";
 import { ResultModal } from "../components/ResultModal";
+import { useNavigate, useParams } from "react-router-dom";
 
 export function GamePage({
-                             onSurrender, //функція переходу
-                             currentTurn, // 'player' або 'enemy'
-                             playerBoard, // { ships, hits } гравця
-                             enemyBoard,  // { ships, hits } ворога
-                             actions,// { takeShot }
+                             onSurrender,
+                             currentTurn,
+                             playerBoard,
+                             enemyBoard,
+                             actions,
                              winner,
                              score
                          }) {
+    const { userId } = useParams();
+    const navigate = useNavigate();
+
     const isPlayerTurn = currentTurn === "player";
     const { settings } = useSettings();
-    const { formatTotalTime, formatTurnTime } = useGameTimers(currentTurn, actions, settings);
+    const { formatTotalTime, formatTurnTime } = useGameTimers(
+        currentTurn,
+        actions,
+        settings
+    );
 
     const handleEnemyCellClick = (coord) => {
         if (!isPlayerTurn) return;
@@ -28,7 +36,13 @@ export function GamePage({
         <div className="game-page full-page">
             <div className="top-bar">
                 <h1>Морський бій</h1>
-                <button className="btn" onClick={onSurrender}>
+                <button
+                    className="btn"
+                    onClick={() => {
+                        onSurrender();
+                        navigate(`/user/${userId}/start`);
+                    }}
+                >
                     Здатися
                 </button>
             </div>
@@ -46,7 +60,13 @@ export function GamePage({
                 <div className={`player-label ${isPlayerTurn ? "active" : ""}`}>
                     Player (Ваш хід)
                 </div>
-                <div className={`turn-arrow ${!isPlayerTurn ? "enemy-turn-arrow" : ""}`}>➡</div>
+                <div
+                    className={`turn-arrow ${
+                        !isPlayerTurn ? "enemy-turn-arrow" : ""
+                    }`}
+                >
+                    ➡
+                </div>
                 <div className={`enemy-label ${!isPlayerTurn ? "active" : ""}`}>
                     Enemy (Хід бота)
                 </div>
@@ -80,13 +100,16 @@ export function GamePage({
                 score={score}
                 onRestart={() => {
                     actions.restartGame();
+                    navigate(`/user/${userId}/game`);
                 }}
                 onNextRound={() => {
                     actions.nextRound();
+                    navigate(`/user/${userId}/placement`);
                 }}
                 onExit={() => {
                     actions.resetScore();
                     actions.hideRules();
+                    navigate(`/user/${userId}/start`);
                 }}
             />
         </div>
