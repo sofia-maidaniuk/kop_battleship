@@ -1,5 +1,5 @@
 import ReactDOM from "react-dom";
-import "../styles/ResultModal.css";
+import styles from "./ResultModal.module.css";
 
 export function ResultModal({ winner, score = { wins: 0, losses: 0 }, onRestart, onNextRound, onExit }) {
     if (!winner) return null;
@@ -10,20 +10,23 @@ export function ResultModal({ winner, score = { wins: 0, losses: 0 }, onRestart,
             : "Поразка... Спробуйте ще раз!";
 
     return ReactDOM.createPortal(
-        <div className="modal-overlay">
-            <div className="modal-window">
-                <h2 className="modal-title">{message}</h2>
-                <p className="score">
+        <div className={styles.overlay}>
+            <div className={styles.window}>
+                <h2 className={styles.title}>{message}</h2>
+                <p className={styles.score}>
                     Рахунок: {score.wins} : {score.losses}
                 </p>
-                <div className="modal-actions">
-                    <button className="btn btn-primary" onClick={onRestart}>
+
+                <div className={styles.actions}>
+                    <button className={`${styles.btn} ${styles.primary}`} onClick={onRestart}>
                         Почати заново
                     </button>
-                    <button className="btn btn-secondary" onClick={onNextRound}>
+
+                    <button className={`${styles.btn} ${styles.secondary}`} onClick={onNextRound}>
                         Наступний тур
                     </button>
-                    <button className="btn btn-exit" onClick={onExit}>
+
+                    <button className={`${styles.btn} ${styles.exit}`} onClick={onExit}>
                         Вийти
                     </button>
                 </div>
@@ -32,4 +35,3 @@ export function ResultModal({ winner, score = { wins: 0, losses: 0 }, onRestart,
         document.getElementById("portal-root")
     );
 }
-

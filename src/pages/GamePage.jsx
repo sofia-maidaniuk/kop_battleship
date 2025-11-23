@@ -1,22 +1,30 @@
 import React from "react";
-import "../styles/GamePage.css";
+import styles from "./GamePage.module.css";
 import { Grid } from "../components/Grid";
 import { useSettings } from "../context/SettingsContext";
 import { useGameTimers } from "../hook/useGameTimers";
 import { ResultModal } from "../components/ResultModal";
+import { useNavigate, useParams } from "react-router-dom";
 
 export function GamePage({
-                             onSurrender, //функція переходу
-                             currentTurn, // 'player' або 'enemy'
-                             playerBoard, // { ships, hits } гравця
-                             enemyBoard,  // { ships, hits } ворога
-                             actions,// { takeShot }
+                             onSurrender,
+                             currentTurn,
+                             playerBoard,
+                             enemyBoard,
+                             actions,
                              winner,
                              score
                          }) {
+    const { userId } = useParams();
+    const navigate = useNavigate();
+
     const isPlayerTurn = currentTurn === "player";
     const { settings } = useSettings();
-    const { formatTotalTime, formatTurnTime } = useGameTimers(currentTurn, actions, settings);
+    const { formatTotalTime, formatTurnTime } = useGameTimers(
+        currentTurn,
+        actions,
+        settings
+    );
 
     const handleEnemyCellClick = (coord) => {
         if (!isPlayerTurn) return;
@@ -25,35 +33,49 @@ export function GamePage({
     };
 
     return (
-        <div className="game-page full-page">
-            <div className="top-bar">
-                <h1>Морський бій</h1>
-                <button className="btn" onClick={onSurrender}>
+        <div className={`${styles.page} full-page`}>
+            <div className={styles.topBar}>
+                <h1 className={styles.title}>Морський бій</h1>
+                <button
+                    className={styles.surrenderBtn}
+                    onClick={() => {
+                        onSurrender();
+                        navigate(`/user/${userId}/start`);
+                    }}
+                >
                     Здатися
                 </button>
             </div>
 
-            <div className="time-panel">
-                <div className="total-timer">
-                    Загальний час: <strong>{formatTotalTime}</strong>
+            <div className={styles.timePanel}>
+                <div className={styles.timerCard}>
+                    <div className={styles.timerLabel}>Загальний час</div>
+                    <div className={styles.timerValue}>{formatTotalTime}</div>
                 </div>
-                <div className="turn-timer">
-                    Час на хід: <strong>{formatTurnTime}</strong>
+
+                <div className={styles.timerCard}>
+                    <div className={styles.timerLabel}>Час на хід</div>
+                    <div className={styles.timerValue}>{formatTurnTime}</div>
                 </div>
             </div>
 
-            <div className="turn-indicator">
-                <div className={`player-label ${isPlayerTurn ? "active" : ""}`}>
+
+            <div className={styles.turnIndicator}>
+                <div className={`${styles.playerLabel} ${isPlayerTurn ? "active" : ""}`}>
                     Player (Ваш хід)
                 </div>
-                <div className={`turn-arrow ${!isPlayerTurn ? "enemy-turn-arrow" : ""}`}>➡</div>
-                <div className={`enemy-label ${!isPlayerTurn ? "active" : ""}`}>
+
+                <div className={`${styles.turnArrow} ${!isPlayerTurn ? styles.enemyArrow : ""}`}>
+                    ➡
+                </div>
+
+                <div className={`${styles.enemyLabel} ${!isPlayerTurn ? "active" : ""}`}>
                     Enemy (Хід бота)
                 </div>
             </div>
 
-            <div className="boards-container">
-                <div className="board-section">
+            <div className={styles.boardsContainer}>
+                <div className={styles.boardSection}>
                     <h2>Моє поле</h2>
                     <Grid
                         ships={playerBoard.ships}
@@ -63,7 +85,7 @@ export function GamePage({
                     />
                 </div>
 
-                <div className="board-section">
+                <div className={styles.boardSection}>
                     <h2>Вороже поле</h2>
                     <Grid
                         ships={enemyBoard.ships}
@@ -80,13 +102,15 @@ export function GamePage({
                 score={score}
                 onRestart={() => {
                     actions.restartGame();
+                    navigate(`/user/${userId}/game`);
                 }}
                 onNextRound={() => {
                     actions.nextRound();
+                    navigate(`/user/${userId}/placement`);
                 }}
                 onExit={() => {
                     actions.resetScore();
-                    actions.hideRules();
+                    navigate(`/user/${userId}/start`);
                 }}
             />
         </div>

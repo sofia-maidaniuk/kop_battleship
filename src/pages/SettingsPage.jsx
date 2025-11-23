@@ -1,9 +1,10 @@
 import React from "react";
+import styles from "./SettingsPage.module.css";
 import { useSettings } from "../context/SettingsContext";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import "../styles/SettingsPage.css";
+import { useNavigate, useParams } from "react-router-dom";
 
 // Схема валідації
 const schema = yup.object().shape({
@@ -13,8 +14,10 @@ const schema = yup.object().shape({
         .required("Рівень складності обов’язковий"),
 });
 
-export function SettingsPage({ onStart, onBack }) {
+export function SettingsPage({ onStart }) {
     const { settings, updateSettings } = useSettings();
+    const navigate = useNavigate();
+    const { userId } = useParams();
 
     // Ініціалізація форми
     const {
@@ -35,21 +38,22 @@ export function SettingsPage({ onStart, onBack }) {
     const onSubmit = (data) => {
         updateSettings({ ...settings, difficulty: data.difficulty });
         if (onStart) onStart();
+        navigate(`/user/${userId}/placement`);
     };
 
     return (
-        <div className="settings-page full-page">
-            <h1>Налаштування гри</h1>
+        <div className={styles.page}>
+            <h1 className={styles.title}>Налаштування гри</h1>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="settings-form">
-                <div className="settings-info">
+            <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+                <div className={styles.info}>
                     <p>
-                        Оберіть рівень складності — час на хід, загальний час гри та логіка бота
-                        підберуться автоматично.
+                        Оберіть рівень складності — час на хід, загальний час гри
+                        та логіка бота підберуться автоматично.
                     </p>
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                     <label>Рівень складності:</label>
                     <select {...register("difficulty")}>
                         <option value="">-- Оберіть рівень --</option>
@@ -57,29 +61,30 @@ export function SettingsPage({ onStart, onBack }) {
                         <option value="medium">Середній</option>
                         <option value="hard">Важкий</option>
                     </select>
+
                     {errors.difficulty && (
-                        <p className="error-message">{errors.difficulty.message}</p>
+                        <p className={styles.error}>{errors.difficulty.message}</p>
                     )}
                 </div>
 
                 {selectedDifficulty && (
-                    <div className="difficulty-summary">
+                    <div className={styles.summary}>
                         {selectedDifficulty === "easy" && (
-                            <ul className="easy">
+                            <ul className={styles.easy}>
                                 <li>Час на хід: 60 секунд</li>
                                 <li>Загальний час гри: 15 хвилин</li>
                                 <li>Бот стріляє випадково</li>
                             </ul>
                         )}
                         {selectedDifficulty === "medium" && (
-                            <ul className="medium">
+                            <ul className={styles.medium}>
                                 <li>Час на хід: 40 секунд</li>
                                 <li>Загальний час гри: 12 хвилин</li>
                                 <li>Бот добиває кораблі після влучання</li>
                             </ul>
                         )}
                         {selectedDifficulty === "hard" && (
-                            <ul className="hard">
+                            <ul className={styles.hard}>
                                 <li>Час на хід: 30 секунд</li>
                                 <li>Загальний час гри: 10 хвилин</li>
                                 <li>Бот уникає клітинок біля потоплених кораблів</li>
@@ -88,15 +93,15 @@ export function SettingsPage({ onStart, onBack }) {
                     </div>
                 )}
 
-                <div className="form-buttons">
+                <div className={styles.buttons}>
                     <button
                         type="button"
-                        className="btn btn-secondary"
-                        onClick={onBack}
-                    >
+                        className={styles.btnSecondary}
+                        onClick={() => navigate(`/user/${userId}/start`)}>
                         Назад
                     </button>
-                    <button type="submit" className="btn btn-primary">
+
+                    <button type="submit" className={styles.btnPrimary}>
                         Почати гру
                     </button>
                 </div>

@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { Grid } from "../components/Grid";
 import { ShipPlacementControls } from "../components/ShipPlacementControls";
-import "../styles/ShipPlacementPage.css";
+import styles from "./ShipPlacementPage.module.css";
 import { generateAutoPlacement } from "../utils/shipUtils";
 import { usePlayerPlacement } from "../hook/usePlayerPlacement";
+import { useNavigate, useParams } from "react-router-dom";
 
-export function ShipPlacementPage({ onStartBattle, onBack }) {
-    // Використання хука для керування станом
+export function ShipPlacementPage({ onStartBattle }) {
+    const navigate = useNavigate();
+    const { userId } = useParams();
+
     const {
         ships,
         placeShip,
@@ -23,12 +26,11 @@ export function ShipPlacementPage({ onStartBattle, onBack }) {
         handleCellHover,
     } = usePlayerPlacement();
 
-    // Стан для відображення повідомлення користувачу про успіх/помилку
-    const [message, setMessage] = useState('');
+    const [message, setMessage] = useState("");
 
     const showMessage = (text, isSuccess = false) => {
         setMessage(text);
-        setTimeout(() => setMessage(''), 3000);
+        setTimeout(() => setMessage(""), 3000);
         return isSuccess;
     };
 
@@ -50,46 +52,49 @@ export function ShipPlacementPage({ onStartBattle, onBack }) {
 
     const handleStartBattleClick = () => {
         if (!canStartBattle) {
-            // Якщо не всі кораблі розставлені
             showMessage("Розставте всі кораблі перед початком бою.", false);
             return;
         }
 
-        // Якщо валідація пройшла успішно
         onStartBattle(ships);
+        navigate(`/user/${userId}/game`);
     };
 
     return (
-        <div className="placement-page">
-            <h1>Розставлення кораблів</h1>
+        <div className={styles.page}>
+            <h1 className={styles.title}>Розставлення кораблів</h1>
 
-            <div className="message-area-wrapper">
+            <div className={styles.messageWrapper}>
                 {message && (
-                    <div className={`placement-message ${message.includes('успішно') ? 'success' : 'error'}`}>
+                    <div
+                        className={`${styles.message} ${
+                            message.includes("успішно")
+                                ? styles.success
+                                : styles.error
+                        }`}
+                    >
                         {message}
                     </div>
                 )}
             </div>
 
-            <div className="placement-content">
-                {/* Ліва частина — сітка */}
+            <div className={styles.content}>
                 <div
-                    className="grid-container"
-                    onMouseLeave={() => handleCellHover(null)} // Скидаємо hover при виході з контейнера
+                    className={styles.gridContainer}
+                    onMouseLeave={() => handleCellHover(null)}
                 >
                     <Grid
                         ships={ships}
                         showShips={true}
                         isEnemy={false}
                         onCellClick={handleCellClick}
-                        onCellHover={handleCellHover} // Передаємо функцію обробки наведення
-                        previewPositions={previewShipPositions} // Передаємо позиції прев'ю
-                        isHoverValid={isPreviewValid} // Передаємо валідність прев'ю
+                        onCellHover={handleCellHover}
+                        previewPositions={previewShipPositions}
+                        isHoverValid={isPreviewValid}
                     />
                 </div>
 
-                {/* Права частина — панель управління */}
-                <div className="controls-panel">
+                <div className={styles.controlsPanel}>
                     <ShipPlacementControls
                         selectedShipSize={selectedShipSize}
                         setSelectedShipSize={setSelectedShipSize}
@@ -102,14 +107,17 @@ export function ShipPlacementPage({ onStartBattle, onBack }) {
                 </div>
             </div>
 
-            <div className="bottom-buttons">
-                <button className="btn btn-back" onClick={onBack}>
+            <div className={styles.buttons}>
+                <button
+                    className={`${styles.btn} ${styles.back}`}
+                    onClick={() => navigate(`/user/${userId}/settings`)}
+                >
                     Назад
                 </button>
+
                 <button
-                    className="btn btn-start"
+                    className={`${styles.btn} ${styles.start}`}
                     onClick={handleStartBattleClick}
-                    disabled={false}
                 >
                     Почати бій
                 </button>

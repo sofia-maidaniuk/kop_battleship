@@ -1,0 +1,56 @@
+.cell {
+    width: 48px;
+    height: 48px;
+    background-color: #e7f2ff;
+    border: 1px solid #bcd0e6;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+/* hover */
+.cell:hover {
+    background-color: #cfe5ff;
+}
+
+/* клітинка союзника з кораблем */
+.allyShip {
+    background-color: #b7dfff;
+}
+
+/* попадання */
+.hit {
+    background-color: #ff5252;
+    border-color: #e60000;
+}
+
+/* промах */
+.miss {
+    background-color: #d6d6d6;
+    border-color: #9e9e9e;
+    position: relative;
+}
+.miss::after {
+    content: "•";
+    color: #555;
+    font-size: 1.3rem;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* потоплений */
+.sunk {
+    background-color: #262626;
+    border-color: #000;
+}
+
+/* прев’ю (valid) */
+.previewValid {
+    background-color: rgba(0, 180, 0, 0.7) !important;
+}
+
+/* прев’ю (invalid) */
+.previewInvalid {
+    background-color: rgba(180, 0, 0, 0.7) !important;
+}
