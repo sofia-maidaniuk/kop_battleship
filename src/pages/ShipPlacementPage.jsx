@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Grid } from "../components/Grid";
 import { ShipPlacementControls } from "../components/ShipPlacementControls";
-import "./ShipPlacementPage.css";
+import styles from "./ShipPlacementPage.module.css";
 import { generateAutoPlacement } from "../utils/shipUtils";
 import { usePlayerPlacement } from "../hook/usePlayerPlacement";
 import { useNavigate, useParams } from "react-router-dom";
 
-export function ShipPlacementPage({ onStartBattle, onBack }) {
+export function ShipPlacementPage({ onStartBattle }) {
     const navigate = useNavigate();
     const { userId } = useParams();
 
@@ -61,14 +61,16 @@ export function ShipPlacementPage({ onStartBattle, onBack }) {
     };
 
     return (
-        <div className="placement-page">
-            <h1>Розставлення кораблів</h1>
+        <div className={styles.page}>
+            <h1 className={styles.title}>Розставлення кораблів</h1>
 
-            <div className="message-area-wrapper">
+            <div className={styles.messageWrapper}>
                 {message && (
                     <div
-                        className={`placement-message ${
-                            message.includes("успішно") ? "success" : "error"
+                        className={`${styles.message} ${
+                            message.includes("успішно")
+                                ? styles.success
+                                : styles.error
                         }`}
                     >
                         {message}
@@ -76,9 +78,9 @@ export function ShipPlacementPage({ onStartBattle, onBack }) {
                 )}
             </div>
 
-            <div className="placement-content">
+            <div className={styles.content}>
                 <div
-                    className="grid-container"
+                    className={styles.gridContainer}
                     onMouseLeave={() => handleCellHover(null)}
                 >
                     <Grid
@@ -92,7 +94,7 @@ export function ShipPlacementPage({ onStartBattle, onBack }) {
                     />
                 </div>
 
-                <div className="controls-panel">
+                <div className={styles.controlsPanel}>
                     <ShipPlacementControls
                         selectedShipSize={selectedShipSize}
                         setSelectedShipSize={setSelectedShipSize}
@@ -105,16 +107,16 @@ export function ShipPlacementPage({ onStartBattle, onBack }) {
                 </div>
             </div>
 
-            <div className="bottom-buttons">
+            <div className={styles.buttons}>
                 <button
-                    className="btn btn-back"
+                    className={`${styles.btn} ${styles.back}`}
                     onClick={() => navigate(`/user/${userId}/settings`)}
                 >
                     Назад
                 </button>
 
                 <button
-                    className="btn btn-start"
+                    className={`${styles.btn} ${styles.start}`}
                     onClick={handleStartBattleClick}
                 >
                     Почати бій

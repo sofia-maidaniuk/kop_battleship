@@ -1,37 +1,39 @@
 import React from "react";
-import "./Cell.css";
+import styles from "./Cell.module.css";
 
 export const Cell = React.memo(function Cell({
                                                  coord,
-                                                 hasShip= false,
+                                                 hasShip = false,
                                                  isEnemy = false,
                                                  state = "empty",
                                                  onClick,
                                                  onMouseEnter,
                                                  onMouseLeave,
-                                                 extraClass = "", // для стилів прев'ю
+                                                 extraClass = "",
                                              }) {
-    // захист від випадкового undefined coord
     if (coord === undefined) return null;
 
-    const className = [
-        "cell",
-        isEnemy ? "enemy-cell" : "ally-cell",
-        hasShip ? "ship" : "",
-        state === "hit" ? "hit" : "",
-        state === "miss" ? "miss" : "",
-        state === "sunk" ? "sunk" : "",
-        extraClass, // Додаємо клас для прев'ю
-    ]
-        .filter(Boolean)
-        .join(" ");
+    const classList = [styles.cell];
+
+    // кораблі гравця
+    if (!isEnemy && hasShip) classList.push(styles.allyShip);
+
+    // стани
+    if (state === "hit") classList.push(styles.hit);
+    if (state === "miss") classList.push(styles.miss);
+    if (state === "sunk") classList.push(styles.sunk);
+
+    // прев’ю (CSS передає клас як string, тому окремо)
+    if (extraClass && styles[extraClass]) {
+        classList.push(styles[extraClass]);
+    }
 
     return (
         <div
-            className={className}
+            className={classList.join(" ")}
             onClick={onClick ? () => onClick(coord) : undefined}
-            onMouseEnter={onMouseEnter} // Викликаємо при наведенні
-            onMouseLeave={onMouseLeave} // Викликаємо при виході
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
             role={onClick ? "button" : undefined}
             tabIndex={onClick ? 0 : undefined}
             onKeyDown={
@@ -43,7 +45,9 @@ export const Cell = React.memo(function Cell({
                     }
                     : undefined
             }
-            aria-label={`Клітинка ${coord}${hasShip ? ", містить корабель" : ""}, стан: ${state}`}
+            aria-label={`Клітинка ${coord}${
+                hasShip ? ", містить корабель" : ""
+            }, стан: ${state}`}
         />
     );
 });

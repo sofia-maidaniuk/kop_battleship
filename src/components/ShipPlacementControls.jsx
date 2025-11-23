@@ -1,8 +1,7 @@
 import React from "react";
-import "./ShipPlacementControls.css";
+import styles from "./ShipPlacementControls.module.css";
 import { SHIP_TYPES } from "../constants/gameConstants";
 
-// Компонент тепер приймає всю логіку з хука через props
 export function ShipPlacementControls({
                                           selectedShipSize,
                                           setSelectedShipSize,
@@ -12,46 +11,45 @@ export function ShipPlacementControls({
                                           onAutoPlacement,
                                           onReset
                                       }) {
-    const shipButtons = Object.values(SHIP_TYPES)
-        .sort((a, b) => b.size - a.size); // Від більшого до меншого
+    const shipButtons = Object.values(SHIP_TYPES).sort((a, b) => b.size - a.size);
 
     return (
-        <div className="ship-controls">
-            <div className="ship-types">
-                <span>Оберіть корабель (розміщено):</span><br/>
-                <div className={'ship-buttons-row'}>
-                    {shipButtons.map(shipType => {
-                        const count = placedShipCounts[shipType.size] || 0;
-                        const maxCount = shipType.count;
-                        const isMax = count >= maxCount;
+        <div className={styles.wrapper}>
 
-                        return (
-                            <button
-                                key={shipType.size}
-                                className={`btn ship-btn ${selectedShipSize === shipType.size ? "active" : ""} ${isMax ? "disabled" : ""}`}
-                                onClick={() => setSelectedShipSize(shipType.size)}
-                                // Залишаємо кнопку активною, якщо це поточний вибір, навіть якщо ліміт вичерпано
-                                disabled={isMax && selectedShipSize !== shipType.size}
-                            >
-                                {shipType.size}-палубний ({count}/{maxCount})
-                            </button>
-                        );
-                    })}
-                </div>
+            <div className={styles.label}>Оберіть корабель (розміщено):</div>
+
+            <div className={styles.shipButtonsRow}>
+                {shipButtons.map(shipType => {
+                    const count = placedShipCounts[shipType.size] || 0;
+                    const max = shipType.count;
+                    const isMax = count >= max;
+
+                    return (
+                        <button
+                            key={shipType.size}
+                            className={`${styles.shipBtn} 
+                                ${selectedShipSize === shipType.size ? styles.active : ""} 
+                                ${isMax && selectedShipSize !== shipType.size ? styles.disabled : ""}`}
+                            onClick={() => setSelectedShipSize(shipType.size)}
+                            disabled={isMax && selectedShipSize !== shipType.size}
+                        >
+                            {shipType.size}-палубний ({count}/{max})
+                        </button>
+                    );
+                })}
             </div>
 
-            <button className="btn full-width" onClick={toggleOrientation}>
+            <button className={`${styles.fullBtn} ${styles.secondary}`} onClick={toggleOrientation}>
                 🔄 {orientation === "horizontal" ? "Горизонтальна" : "Вертикальна"}
             </button>
 
-            <button className="btn btn-secondary full-width" onClick={onAutoPlacement}>
+            <button className={`${styles.fullBtn} ${styles.secondary}`} onClick={onAutoPlacement}>
                 Автоматично розставити
             </button>
 
-            <button className="btn btn-danger full-width" onClick={onReset}>
+            <button className={`${styles.fullBtn} ${styles.danger}`} onClick={onReset}>
                 Скинути все
             </button>
-
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import "./StartPage.css";
+import styles from "./StartPage.module.css";
 import { useNavigate, useParams } from "react-router-dom";
 
 export function StartPage({ onStart, onShowRules }) {
@@ -7,7 +7,7 @@ export function StartPage({ onStart, onShowRules }) {
     const { userId } = useParams();
 
     const handleStart = () => {
-        onStart(); // логіка гри
+        onStart();
         navigate(`/user/${userId}/settings`);
     };
 
@@ -17,11 +17,16 @@ export function StartPage({ onStart, onShowRules }) {
     };
 
     return (
-        <div className="full-page">
-            <h1>Морський бій</h1>
-            <div className="buttons">
-                <button className="btn" onClick={handleStart}>Почати гру</button>
-                <button className="btn" onClick={handleRules}>Правила гри</button>
+        <div className={styles.fullPage}>
+            <h1 className={styles.title}>Морський бій</h1>
+
+            <div className={styles.buttons}>
+                <button className={styles.btn} onClick={handleStart}>
+                    Почати гру
+                </button>
+                <button className={styles.btn} onClick={handleRules}>
+                    Правила гри
+                </button>
             </div>
         </div>
     );

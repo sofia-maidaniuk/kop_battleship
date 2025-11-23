@@ -1,7 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 :root {
     --bg-color: #ECF6FF;
     --primary-color: #03045E;
@@ -19,39 +15,3 @@ html, body, #root {
     background-color: var(--bg-color);
 }
 
-/* Базовий контейнер для повноекранних сторінок */
-.full-page {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    width: 100vw;
-    background-color: var(--bg-color);
-    box-sizing: border-box;
-}
-
-/* Заголовки */
-h1, h2, h3 {
-    color: var(--text-color);
-    font-weight: bold;
-    text-align: center;
-    margin: 0 0 20px;
-}
-
-/* Базова кнопка */
-.btn {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 10px 20px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.btn:hover {
-    background-color: var(--primary-hover);
-}
