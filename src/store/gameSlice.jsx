@@ -100,7 +100,7 @@ const gameSlice = createSlice({
             state.winner = null;
         },
 
-        // логіка пострілу
+        // логіка пострілу (гравець або бот)
         takeShot(state, action) {
             const { coord, shooter } = action.payload;
 
@@ -137,7 +137,7 @@ const gameSlice = createSlice({
             }
         },
 
-        // новий екшен: передати хід ворогу
+        // передати хід ворогу, коли в гравця вийшов час
         endPlayerTurn(state) {
             state.currentTurn = "enemy";
         },
@@ -167,28 +167,67 @@ const gameSlice = createSlice({
         surrender(state) {
             state.winner = "enemy";
         },
+
+        // постріл бота — окремий редʼюсер, який використовує AI
+        executeEnemyTurn(state, action) {
+            const { settings } = action.payload;
+            const coord = getEnemyShot(state.playerBoard, settings.aiMode);
+            if (!coord) return;
+
+            const shotResult = processShot(coord, state.playerBoard.ships);
+
+            const newHits = { ...state.playerBoard.hits };
+            newHits[coord] = shotResult.isHit ? "hit" : "miss";
+
+            if (shotResult.sunkShipPositions?.length) {
+                shotResult.sunkShipPositions.forEach((pos) => {
+                    newHits[pos] = "sunk";
+                });
+            }
+
+            state.playerBoard = {
+                ships: shotResult.updatedShips,
+                hits: newHits,
+            };
+
+            state.currentTurn = shotResult.isHit ? "enemy" : "player";
+
+            if (shotResult.allSunk) {
+                state.winner = "enemy";
+            }
+        },
     },
 });
 
-// логіка ходу бота
-export const botTurn = () => (dispatch, getState) => {
-    const { game, settings } = getState();
+// middleware: якщо зараз хід бота — через затримку викликаємо executeEnemyTurn
+export const botTurnMiddleware = (store) => (next) => (action) => {
+    const result = next(action);
 
-    if (game.phase !== GamePhase.GAME) return;
-    if (game.currentTurn !== "enemy") return;
-    if (game.winner) return;
+    const state = store.getState();
+    const { game, settings } = state;
 
-    const coord = getEnemyShot(game.playerBoard, settings.aiMode);
-    if (!coord) return;
+    if (
+        game.phase === GamePhase.GAME &&
+        game.currentTurn === "enemy" &&
+        !game.winner
+    ) {
+        setTimeout(() => {
+            const latestState = store.getState();
+            const { game: g2, settings: s2 } = latestState;
 
-    setTimeout(() => {
-        dispatch(
-            takeShot({
-                coord,
-                shooter: "enemy",
-            })
-        );
-    }, settings.enemyDelay || 1000);
+            if (
+                g2.phase === GamePhase.GAME &&
+                g2.currentTurn === "enemy" &&
+                !g2.winner
+            ) {
+                store.dispatch(
+                    gameSlice.actions.executeEnemyTurn({ settings: s2 })
+                );
+            }
+        }, settings.enemyDelay || 1000);
+    }
+
+    return result;
 };
 
 export const {
@@ -203,6 +242,7 @@ export const {
     resetScore,
     surrender,
     endPlayerTurn,
+    executeEnemyTurn,
 } = gameSlice.actions;
 
 export default gameSlice.reducer;

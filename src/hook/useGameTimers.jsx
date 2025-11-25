@@ -2,18 +2,16 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { endPlayerTurn, surrender } from "../store/gameSlice";
 
-export function useGameTimers(currentTurn) {
+export function useGameTimers() {
     const dispatch = useDispatch();
 
-    // беремо налаштування з Redux
     const settings = useSelector((state) => state.settings);
+    const currentTurn = useSelector((state) => state.game.currentTurn);
+    const winner = useSelector((state) => state.game.winner);
 
-    // Загальний час гри (секунди)
     const [totalTime, setTotalTime] = useState(settings.totalTime * 60);
-    // Час на поточний хід (у секундах)
     const [turnTime, setTurnTime] = useState(settings.turnTimeLimit);
 
-    // Форматування секунд у формат хв:сек
     const formatTime = (seconds) => {
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
@@ -22,8 +20,9 @@ export function useGameTimers(currentTurn) {
 
     // Загальний таймер гри
     useEffect(() => {
+        if (winner) return;
+
         if (totalTime <= 0) {
-            // завершити гру – програв гравець
             dispatch(surrender());
             return;
         }
@@ -33,14 +32,14 @@ export function useGameTimers(currentTurn) {
         }, 1000);
 
         return () => clearInterval(totalTimer);
-    }, [totalTime, dispatch]);
+    }, [totalTime, winner, dispatch]);
 
     //Таймер ходу (оновлюється кожну секунду)
     useEffect(() => {
+        if (winner) return;
         if (currentTurn !== "player") return;
 
         if (turnTime <= 0) {
-            // час ходу вичерпано → передаємо хід ворогу
             dispatch(endPlayerTurn());
             setTurnTime(settings.turnTimeLimit);
             return;
@@ -51,14 +50,14 @@ export function useGameTimers(currentTurn) {
         }, 1000);
 
         return () => clearInterval(turnTimer);
-    }, [currentTurn, turnTime, dispatch, settings.turnTimeLimit]);
+    }, [currentTurn, turnTime, winner, dispatch, settings.turnTimeLimit]);
 
     // Скидання часу на хід при зміні черги
     useEffect(() => {
-        if (currentTurn === "player") {
+        if (currentTurn === "player" && !winner) {
             setTurnTime(settings.turnTimeLimit);
         }
-    }, [currentTurn, settings.turnTimeLimit]);
+    }, [currentTurn, settings.turnTimeLimit, winner]);
 
     return {
         turnTime,

@@ -1,38 +1,65 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./GamePage.module.css";
 import { Grid } from "../components/Grid";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useGameTimers } from "../hook/useGameTimers";
 import { ResultModal } from "../components/ResultModal";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+    takeShot,
+    restartGame,
+    nextRound,
+    resetScore,
+    surrender,
+    incrementWin,
+    incrementLoss,
+} from "../store/gameSlice";
 
-export function GamePage({
-                             onSurrender,
-                             currentTurn,
-                             playerBoard,
-                             enemyBoard,
-                             actions,
-                             winner,
-                             score
-                         }) {
-    const { userId } = useParams();
+export function GamePage() {
     const navigate = useNavigate();
+    const { userId } = useParams();
+    const dispatch = useDispatch();
+
+    const {
+        currentTurn,
+        playerBoard,
+        enemyBoard,
+        winner,
+        score,
+    } = useSelector((state) => state.game);
 
     const isPlayerTurn = currentTurn === "player";
 
-    // беремо settings з Redux
-    const settings = useSelector((state) => state.settings);
+    const { formatTotalTime, formatTurnTime } = useGameTimers();
 
-    const { formatTotalTime, formatTurnTime } = useGameTimers(
-        currentTurn,
-        actions,
-        settings
-    );
+    const [scoreUpdated, setScoreUpdated] = useState(false);
+
+    // оновлення рахунку один раз за раунд
+    useEffect(() => {
+        if (winner && !scoreUpdated) {
+            if (winner === "player") {
+                dispatch(incrementWin());
+            } else if (winner === "enemy") {
+                dispatch(incrementLoss());
+            }
+            setScoreUpdated(true);
+        }
+
+        if (!winner && scoreUpdated) {
+            setScoreUpdated(false);
+        }
+    }, [winner, scoreUpdated, dispatch]);
 
     const handleEnemyCellClick = (coord) => {
         if (!isPlayerTurn) return;
         if (enemyBoard.hits[coord]) return;
-        actions.takeShot(coord, "player");
+
+        dispatch(
+            takeShot({
+                coord,
+                shooter: "player",
+            })
+        );
     };
 
     return (
@@ -42,7 +69,7 @@ export function GamePage({
                 <button
                     className={styles.surrenderBtn}
                     onClick={() => {
-                        onSurrender();
+                        dispatch(surrender());
                         navigate(`/user/${userId}/start`);
                     }}
                 >
@@ -63,15 +90,27 @@ export function GamePage({
             </div>
 
             <div className={styles.turnIndicator}>
-                <div className={`${styles.playerLabel} ${isPlayerTurn ? "active" : ""}`}>
+                <div
+                    className={`${styles.playerLabel} ${
+                        isPlayerTurn ? "active" : ""
+                    }`}
+                >
                     Player (Ваш хід)
                 </div>
 
-                <div className={`${styles.turnArrow} ${!isPlayerTurn ? styles.enemyArrow : ""}`}>
+                <div
+                    className={`${styles.turnArrow} ${
+                        !isPlayerTurn ? styles.enemyArrow : ""
+                    }`}
+                >
                     ➡
                 </div>
 
-                <div className={`${styles.enemyLabel} ${!isPlayerTurn ? "active" : ""}`}>
+                <div
+                    className={`${styles.enemyLabel} ${
+                        !isPlayerTurn ? "active" : ""
+                    }`}
+                >
                     Enemy (Хід бота)
                 </div>
             </div>
@@ -103,15 +142,14 @@ export function GamePage({
                 winner={winner}
                 score={score}
                 onRestart={() => {
-                    actions.restartGame();
-                    navigate(`/user/${userId}/game`);
+                    dispatch(restartGame());
                 }}
                 onNextRound={() => {
-                    actions.nextRound();
+                    dispatch(nextRound());
                     navigate(`/user/${userId}/placement`);
                 }}
                 onExit={() => {
-                    actions.resetScore();
+                    dispatch(resetScore());
                     navigate(`/user/${userId}/start`);
                 }}
             />

@@ -5,68 +5,64 @@ const STORAGE_KEY = "battleship-settings";
 const defaultSettings = {
     difficulty: "easy",
     turnTimeLimit: 60,
-    totalTime: 15,
-    enemyDelay: 1200,
+    totalTime: 15,      // хвилин
+    enemyDelay: 1200,   // мс
     aiMode: "random",
 };
 
-// Load from localStorage
-function loadSettings() {
-    try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) return defaultSettings;
-
-        const parsed = JSON.parse(saved);
-        return { ...defaultSettings, ...parsed };
-    } catch {
-        console.warn("Invalid settings in storage");
-        return defaultSettings;
+function applyDifficulty(base) {
+    switch (base.difficulty) {
+        case "easy":
+            return {
+                ...base,
+                turnTimeLimit: 60,
+                totalTime: 15,
+                enemyDelay: 1200,
+                aiMode: "random",
+            };
+        case "medium":
+            return {
+                ...base,
+                turnTimeLimit: 40,
+                totalTime: 12,
+                enemyDelay: 800,
+                aiMode: "target",
+            };
+        case "hard":
+            return {
+                ...base,
+                turnTimeLimit: 30,
+                totalTime: 10,
+                enemyDelay: 400,
+                aiMode: "smart",
+            };
+        default:
+            return { ...defaultSettings };
     }
 }
 
-const initialState = loadSettings();
-
-// Helper to update based on difficulty
-function applyDifficultyLogic(state) {
-    if (state.difficulty === "easy") {
-        state.turnTimeLimit = 60;
-        state.totalTime = 15;
-        state.enemyDelay = 1200;
-        state.aiMode = "random";
-    }
-
-    if (state.difficulty === "medium") {
-        state.turnTimeLimit = 40;
-        state.totalTime = 12;
-        state.enemyDelay = 800;
-        state.aiMode = "target";
-    }
-
-    if (state.difficulty === "hard") {
-        state.turnTimeLimit = 30;
-        state.totalTime = 10;
-        state.enemyDelay = 400;
-        state.aiMode = "smart";
+function loadInitialSettings() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return defaultSettings;
+    try {
+        const parsed = JSON.parse(saved);
+        return applyDifficulty({ ...defaultSettings, ...parsed });
+    } catch {
+        console.warn("Invalid settings in storage, using defaults");
+        return defaultSettings;
     }
 }
 
 const settingsSlice = createSlice({
     name: "settings",
-    initialState,
+    initialState: loadInitialSettings(),
     reducers: {
         updateSettings(state, action) {
-            const updates = action.payload;
-
-            // Оновлюємо state
-            Object.assign(state, updates);
-
-            // Перерахунок залежно від difficulty
-            applyDifficultyLogic(state);
-
-            // Збереження у localStorage
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            const merged = { ...state, ...action.payload };
+            const finalSettings = applyDifficulty(merged);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(finalSettings));
+            return finalSettings;
         },
-
         resetSettings() {
             localStorage.removeItem(STORAGE_KEY);
             return defaultSettings;

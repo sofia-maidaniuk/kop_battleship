@@ -4,12 +4,9 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate, useParams } from "react-router-dom";
-
-// Redux
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { updateSettings } from "../store/settingsSlice";
 
-// Валідація
 const schema = yup.object().shape({
     difficulty: yup
         .string()
@@ -17,12 +14,12 @@ const schema = yup.object().shape({
         .required("Рівень складності обов’язковий"),
 });
 
-export function SettingsPage({ onStart }) {
-    const dispatch = useDispatch();
-    const settings = useSelector((state) => state.settings);
-
+export function SettingsPage() {
     const navigate = useNavigate();
     const { userId } = useParams();
+    const dispatch = useDispatch();
+
+    const settings = useSelector((state) => state.settings);
 
     const {
         register,
@@ -40,7 +37,6 @@ export function SettingsPage({ onStart }) {
 
     const onSubmit = (data) => {
         dispatch(updateSettings({ difficulty: data.difficulty }));
-        if (onStart) onStart();
         navigate(`/user/${userId}/placement`);
     };
 
