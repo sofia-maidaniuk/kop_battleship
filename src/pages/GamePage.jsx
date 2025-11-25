@@ -13,6 +13,7 @@ import {
     surrender,
     incrementWin,
     incrementLoss,
+    addRoundToHistory
 } from "../store/gameSlice";
 
 export function GamePage() {
@@ -28,27 +29,50 @@ export function GamePage() {
         score,
     } = useSelector((state) => state.game);
 
+    const settings = useSelector((state) => state.settings);
+
     const isPlayerTurn = currentTurn === "player";
 
-    const { formatTotalTime, formatTurnTime } = useGameTimers();
+    const { formatTotalTime, formatTurnTime, getDurationForHistory } = useGameTimers();
 
     const [scoreUpdated, setScoreUpdated] = useState(false);
+    const [historySaved, setHistorySaved] = useState(false);
 
-    // оновлення рахунку один раз за раунд
+    // ОНОВЛЕННЯ РАХУНКУ
     useEffect(() => {
-        if (winner && !scoreUpdated) {
-            if (winner === "player") {
-                dispatch(incrementWin());
-            } else if (winner === "enemy") {
-                dispatch(incrementLoss());
-            }
+        if (!winner) return;
+
+        if (!scoreUpdated) {
+            if (winner === "player") dispatch(incrementWin());
+            else dispatch(incrementLoss());
+
             setScoreUpdated(true);
         }
-
-        if (!winner && scoreUpdated) {
-            setScoreUpdated(false);
-        }
     }, [winner, scoreUpdated, dispatch]);
+
+    //ЗАПИС РАУНДУ В ІСТОРІЮ
+    useEffect(() => {
+        if (!winner) return;
+
+        if (!historySaved) {
+            const roundStats = {
+                winner,
+                duration: getDurationForHistory(), // Використовуємо правильну функцію
+                difficulty: settings.difficulty,
+            };
+
+            dispatch(addRoundToHistory(roundStats));
+            setHistorySaved(true);
+        }
+    }, [winner, historySaved, dispatch, settings, getDurationForHistory]);
+
+    // СКИДАННЯ ФЛАГІВ НА НОВУ ГРУ
+    useEffect(() => {
+        if (!winner) {
+            setScoreUpdated(false);
+            setHistorySaved(false);
+        }
+    }, [winner]);
 
     const handleEnemyCellClick = (coord) => {
         if (!isPlayerTurn) return;
@@ -153,6 +177,7 @@ export function GamePage() {
                     dispatch(resetScore());
                     navigate(`/user/${userId}/start`);
                 }}
+                onViewResults={() => navigate(`/user/${userId}/results`)}
             />
         </div>
     );

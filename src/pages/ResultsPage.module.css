@@ -1,0 +1,226 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px 20px;
+    width: 100%;
+    min-height: 100vh;
+    box-sizing: border-box;
+    background-color: var(--bg-color);
+}
+
+.title {
+    margin: 0 0 30px 0;
+    color: var(--text-color);
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.subtitle {
+    margin: 40px 0 20px 0;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.scoreBlock {
+    display: flex;
+    gap: 25px;
+    justify-content: center;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.scoreCard {
+    background: white;
+    border: 2px solid #d2e7ff;
+    padding: 20px 30px;
+    border-radius: 16px;
+    min-width: 150px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.scoreCard span {
+    color: var(--primary-color);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.scoreCard strong {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.table {
+    width: 100%;
+    max-width: 900px;
+    background: white;
+    border-collapse: collapse;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+}
+
+.table th {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 15px 10px;
+    font-weight: 600;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.table td {
+    padding: 12px 10px;
+    text-align: center;
+    border-bottom: 1px solid #eef5ff;
+    color: var(--text-color);
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #f8fbff;
+}
+
+.table tbody tr:hover {
+    background-color: #eef5ff;
+}
+
+.player {
+    color: #00a000 !important;
+    font-weight: 600;
+}
+
+.enemy {
+    color: #b30000 !important;
+    font-weight: 600;
+}
+
+.empty {
+    text-align: center;
+    color: var(--text-color);
+    font-size: 1.1rem;
+    margin: 40px 0;
+}
+
+.buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 12px 24px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+    min-width: 140px;
+}
+
+.btn:hover {
+    background-color: var(--primary-hover);
+}
+
+.btnReset {
+    padding: 12px 24px;
+    background-color: #b30000;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+    min-width: 140px;
+}
+
+.btnReset:hover {
+    background-color: #800000;
+}
+
+/* Адаптивність для мобільних пристроїв */
+@media (max-width: 768px) {
+    .page {
+        padding: 20px 15px;
+    }
+
+    .title {
+        font-size: 2rem;
+        margin-bottom: 20px;
+    }
+
+    .subtitle {
+        font-size: 1.3rem;
+        margin: 30px 0 15px 0;
+    }
+
+    .scoreBlock {
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .scoreCard {
+        padding: 15px 20px;
+        min-width: 120px;
+    }
+
+    .scoreCard strong {
+        font-size: 1.5rem;
+    }
+
+    .table {
+        font-size: 0.9rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 10px 5px;
+    }
+
+    .buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn,
+    .btnReset {
+        width: 100%;
+        max-width: 250px;
+    }
+}
+
+@media (max-width: 480px) {
+    .table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .scoreCard {
+        min-width: 100px;
+        padding: 12px 15px;
+    }
+
+    .scoreCard span {
+        font-size: 0.9rem;
+    }
+
+    .scoreCard strong {
+        font-size: 1.3rem;
+    }
+}

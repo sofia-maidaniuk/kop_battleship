@@ -12,11 +12,6 @@ export const GamePhase = {
     RULES: "rules",
 };
 
-const initialBoardState = {
-    ships: [],
-    hits: {},
-};
-
 const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
 
 const resetShipState = (ship) => ({
@@ -28,17 +23,24 @@ const resetShipState = (ship) => ({
 const normalizeShips = (ships) => (ships || []).map(resetShipState);
 
 const generateInitialEnemyBoard = () => ({
-    ...initialBoardState,
     ships: normalizeShips(generateAutoPlacement()),
+    hits: {},
 });
 
 const getInitialState = () => ({
     phase: GamePhase.START,
     currentTurn: "player",
-    playerBoard: { ...initialBoardState },
+
+    playerBoard: { ships: [], hits: {} },
     enemyBoard: generateInitialEnemyBoard(),
+
     winner: null,
+
     score: { wins: 0, losses: 0 },
+
+    history: [], // ДОДАНО: ініціалізація history як пустого масиву
+    currentRound: 1,
+
     baselinePlayerShips: null,
 });
 
@@ -48,6 +50,19 @@ const gameSlice = createSlice({
     reducers: {
         setPhase(state, action) {
             state.phase = action.payload;
+        },
+
+        addRoundToHistory(state, action) {
+            // ПЕРЕВІРКА: переконатися, що history існує
+            if (!state.history) {
+                state.history = [];
+            }
+            state.history.push({
+                roundNumber: state.currentRound,
+                ...action.payload,
+                timestamp: Date.now(),
+            });
+            state.currentRound += 1;
         },
 
         setScore(state, action) {
@@ -61,10 +76,7 @@ const gameSlice = createSlice({
 
             state.phase = GamePhase.GAME;
             state.playerBoard = { ships: cleanShips, hits: {} };
-            state.enemyBoard = {
-                ...initialBoardState,
-                ships: normalizeShips(generateAutoPlacement()),
-            };
+            state.enemyBoard = generateInitialEnemyBoard();
 
             state.baselinePlayerShips = deepClone(cleanShips);
             state.winner = null;
@@ -74,18 +86,15 @@ const gameSlice = createSlice({
         restartGame(state) {
             resetAIMemory();
 
-            if (state.baselinePlayerShips) {
-                const clean = normalizeShips(deepClone(state.baselinePlayerShips));
-                state.playerBoard = {
-                    ships: clean,
-                    hits: {},
-                };
-            }
+            const src = state.baselinePlayerShips || [];
+            const clean = normalizeShips(deepClone(src));
 
-            state.enemyBoard = {
-                ...initialBoardState,
-                ships: normalizeShips(generateAutoPlacement()),
+            state.playerBoard = {
+                ships: clean,
+                hits: {},
             };
+
+            state.enemyBoard = generateInitialEnemyBoard();
 
             state.phase = GamePhase.GAME;
             state.currentTurn = "player";
@@ -151,6 +160,9 @@ const gameSlice = createSlice({
 
         resetScore(state) {
             state.score = { wins: 0, losses: 0 };
+            // ДОДАНО: скидання history
+            state.history = [];
+            state.currentRound = 1;
             localStorage.removeItem("battleship-score");
         },
 
@@ -201,13 +213,16 @@ export const botTurnMiddleware = (store) => (next) => (action) => {
     ) {
         setTimeout(() => {
             const latest = store.getState();
+
             if (
                 latest.game.phase === GamePhase.GAME &&
                 latest.game.currentTurn === "enemy" &&
                 !latest.game.winner
             ) {
                 store.dispatch(
-                    gameSlice.actions.executeEnemyTurn({ settings: latest.settings })
+                    gameSlice.actions.executeEnemyTurn({
+                        settings: latest.settings,
+                    })
                 );
             }
         }, settings.enemyDelay || 1000);
@@ -219,6 +234,7 @@ export const botTurnMiddleware = (store) => (next) => (action) => {
 export const {
     setPhase,
     setScore,
+    addRoundToHistory,
     startGameWithShips,
     restartGame,
     takeShot,

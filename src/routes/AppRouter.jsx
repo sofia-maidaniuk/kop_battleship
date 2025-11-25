@@ -6,6 +6,7 @@ import { SettingsPage } from "../pages/SettingsPage";
 import { ShipPlacementPage } from "../pages/ShipPlacementPage";
 import { GamePage } from "../pages/GamePage";
 import { RulesPage } from "../pages/RulesPage";
+import { ResultsPage } from "../pages/ResultsPage";
 import { setPhase, startGameWithShips, GamePhase } from "../store/gameSlice";
 
 export function AppRouter({ userId }) {
@@ -52,6 +53,11 @@ export function AppRouter({ userId }) {
             <Route
                 path="/user/:userId/rules"
                 element={<RulesPage />}
+            />
+
+            <Route
+                path="/user/:userId/results"
+                element={<ResultsPage />}
             />
 
             <Route path="*" element={<div>404: Page Not Found</div>} />
