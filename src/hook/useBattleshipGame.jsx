@@ -1,7 +1,7 @@
 import { useReducer, useMemo, useEffect, useCallback, useState } from "react";
 import { processShot } from "../utils/gameLogicUtils";
 import { generateAutoPlacement } from "../utils/shipUtils";
-import { useSettings } from "../context/SettingsContext.jsx";
+import { useSelector } from "react-redux";
 import { getEnemyShot, resetAIMemory } from "../utils/enemyLogic";
 
 const GamePhase = {
@@ -56,7 +56,6 @@ function gameReducer(state, action) {
         case "SET_SCORE":
             return { ...state, score: action.payload };
 
-        // Почати заново : залишає ті ж кораблі гравця (чиста копія), ворогу — нові
         case "RESTART_GAME": {
             resetAIMemory();
 
@@ -82,7 +81,6 @@ function gameReducer(state, action) {
             };
         }
 
-        // Початок гри після розстановки кораблів, фіксуємо еталонну розкладку
         case "START_GAME_WITH_SHIPS": {
             resetAIMemory();
             const cleanShips = normalizeShips(deepClone(action.payload));
@@ -97,7 +95,6 @@ function gameReducer(state, action) {
             };
         }
 
-        // Обробка пострілу
         case "TAKE_SHOT": {
             const { coord, shooter } = action.payload;
             const target = shooter === "player" ? "enemy" : "player";
@@ -151,7 +148,6 @@ function gameReducer(state, action) {
             return { ...state, score: updated };
         }
 
-        // Наступний тур, повернення на етап розстановки кораблів
         case "NEXT_ROUND":
             resetAIMemory();
             return {
@@ -161,7 +157,6 @@ function gameReducer(state, action) {
                 winner: null,
             };
 
-        // Обнулення рахунку
         case "RESET_SCORE":
             localStorage.removeItem("battleship-score");
             return { ...state, score: { wins: 0, losses: 0 } };
@@ -179,12 +174,12 @@ function gameReducer(state, action) {
 
 export function useBattleshipGame() {
     const [state, dispatch] = useReducer(gameReducer, initialState);
-    const { settings } = useSettings();
 
-    // Флаг, щоб рахунок оновився рівно один раз за раунд
+    // Redux selector
+    const settings = useSelector((state) => state.settings);
+
     const [scoreUpdated, setScoreUpdated] = useState(false);
 
-    // Зчитуємо рахунок із localStorage
     useEffect(() => {
         const savedScore = localStorage.getItem("battleship-score");
         if (savedScore) {
@@ -197,12 +192,10 @@ export function useBattleshipGame() {
         }
     }, []);
 
-    // Постріл
     const takeShot = useCallback((coord, shooter = "player") => {
         dispatch({ type: "TAKE_SHOT", payload: { coord, shooter } });
     }, []);
 
-    // логіка бота
     useEffect(() => {
         if (state.phase !== GamePhase.GAME || state.currentTurn !== "enemy" || state.winner)
             return;
@@ -224,7 +217,6 @@ export function useBattleshipGame() {
         settings,
     ]);
 
-    // Автоматично оновити рахунок один раз після визначення переможця
     useEffect(() => {
         if (state.winner && !scoreUpdated) {
             if (state.winner === "player") {
@@ -240,7 +232,6 @@ export function useBattleshipGame() {
         }
     }, [state.winner, scoreUpdated]);
 
-    // Експорт дій
     const actions = useMemo(
         () => ({
             takeShot,
@@ -250,12 +241,7 @@ export function useBattleshipGame() {
             showRules: () => dispatch({ type: "SET_PHASE", payload: "rules" }),
             hideRules: () => dispatch({ type: "SET_PHASE", payload: "start" }),
             openSettings: () => dispatch({ type: "SET_PHASE", payload: "settings" }),
-
-            // Здатися: тільки фіксує переможця, рахунок додасть useEffect
-            surrender: () => {
-                dispatch({ type: "SURRENDER", payload: "player" });
-            },
-
+            surrender: () => dispatch({ type: "SURRENDER", payload: "player" }),
             restartGame: () => dispatch({ type: "RESTART_GAME" }),
             nextRound: () => dispatch({ type: "NEXT_ROUND" }),
             endPlayerTurn: () => dispatch({ type: "END_PLAYER_TURN" }),

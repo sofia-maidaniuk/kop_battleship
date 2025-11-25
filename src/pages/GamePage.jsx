@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "./GamePage.module.css";
 import { Grid } from "../components/Grid";
-import { useSettings } from "../context/SettingsContext";
+import { useSelector } from "react-redux";
 import { useGameTimers } from "../hook/useGameTimers";
 import { ResultModal } from "../components/ResultModal";
 import { useNavigate, useParams } from "react-router-dom";
@@ -19,7 +19,10 @@ export function GamePage({
     const navigate = useNavigate();
 
     const isPlayerTurn = currentTurn === "player";
-    const { settings } = useSettings();
+
+    // беремо settings з Redux
+    const settings = useSelector((state) => state.settings);
+
     const { formatTotalTime, formatTurnTime } = useGameTimers(
         currentTurn,
         actions,
@@ -58,7 +61,6 @@ export function GamePage({
                     <div className={styles.timerValue}>{formatTurnTime}</div>
                 </div>
             </div>
-
 
             <div className={styles.turnIndicator}>
                 <div className={`${styles.playerLabel} ${isPlayerTurn ? "active" : ""}`}>
