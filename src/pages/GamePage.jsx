@@ -143,6 +143,7 @@ export function GamePage() {
                 score={score}
                 onRestart={() => {
                     dispatch(restartGame());
+                    navigate(`/user/${userId}/game`);
                 }}
                 onNextRound={() => {
                     dispatch(nextRound());

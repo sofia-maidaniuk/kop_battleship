@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { endPlayerTurn, surrender } from "../store/gameSlice";
 
+const LS_TOTAL = "battle_total_time";
+const LS_TURN = "battle_turn_time";
+
 export function useGameTimers() {
     const dispatch = useDispatch();
 
@@ -9,8 +12,19 @@ export function useGameTimers() {
     const currentTurn = useSelector((state) => state.game.currentTurn);
     const winner = useSelector((state) => state.game.winner);
 
-    const [totalTime, setTotalTime] = useState(settings.totalTime * 60);
-    const [turnTime, setTurnTime] = useState(settings.turnTimeLimit);
+    // відновлення часу гри
+    const loadNumber = (key, fallback) => {
+        const saved = localStorage.getItem(key);
+        return saved !== null ? Number(saved) : fallback;
+    };
+
+    const [totalTime, setTotalTime] = useState(
+        loadNumber(LS_TOTAL, settings.totalTime * 60)
+    );
+
+    const [turnTime, setTurnTime] = useState(
+        loadNumber(LS_TURN, settings.turnTimeLimit)
+    );
 
     const formatTime = (seconds) => {
         const m = Math.floor(seconds / 60);
@@ -28,7 +42,11 @@ export function useGameTimers() {
         }
 
         const totalTimer = setInterval(() => {
-            setTotalTime((prev) => (prev > 0 ? prev - 1 : 0));
+            setTotalTime((prev) => {
+                const next = prev > 0 ? prev - 1 : 0;
+                localStorage.setItem(LS_TOTAL, next);
+                return next;
+            });
         }, 1000);
 
         return () => clearInterval(totalTimer);
@@ -41,12 +59,18 @@ export function useGameTimers() {
 
         if (turnTime <= 0) {
             dispatch(endPlayerTurn());
-            setTurnTime(settings.turnTimeLimit);
+            const resetValue = settings.turnTimeLimit;
+            setTurnTime(resetValue);
+            localStorage.setItem(LS_TURN, resetValue);
             return;
         }
 
         const turnTimer = setInterval(() => {
-            setTurnTime((prev) => (prev > 0 ? prev - 1 : 0));
+            setTurnTime((prev) => {
+                const next = prev > 0 ? prev - 1 : 0;
+                localStorage.setItem(LS_TURN, next);
+                return next;
+            });
         }, 1000);
 
         return () => clearInterval(turnTimer);
@@ -55,7 +79,9 @@ export function useGameTimers() {
     // Скидання часу на хід при зміні черги
     useEffect(() => {
         if (currentTurn === "player" && !winner) {
-            setTurnTime(settings.turnTimeLimit);
+            const resetValue = settings.turnTimeLimit;
+            setTurnTime(resetValue);
+            localStorage.setItem(LS_TURN, resetValue);
         }
     }, [currentTurn, settings.turnTimeLimit, winner]);
 

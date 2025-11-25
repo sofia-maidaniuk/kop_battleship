@@ -3,7 +3,6 @@ import { generateAutoPlacement } from "../utils/shipUtils";
 import { processShot } from "../utils/gameLogicUtils";
 import { getEnemyShot, resetAIMemory } from "../utils/enemyLogic";
 
-// фази гри
 export const GamePhase = {
     START: "start",
     SETTINGS: "settings",
@@ -18,7 +17,6 @@ const initialBoardState = {
     hits: {},
 };
 
-// допоміжні функції
 const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
 
 const resetShipState = (ship) => ({
@@ -34,20 +32,19 @@ const generateInitialEnemyBoard = () => ({
     ships: normalizeShips(generateAutoPlacement()),
 });
 
-// початковий стан Redux
-const initialState = {
+const getInitialState = () => ({
     phase: GamePhase.START,
     currentTurn: "player",
-    playerBoard: initialBoardState,
+    playerBoard: { ...initialBoardState },
     enemyBoard: generateInitialEnemyBoard(),
     winner: null,
     score: { wins: 0, losses: 0 },
     baselinePlayerShips: null,
-};
+});
 
 const gameSlice = createSlice({
     name: "game",
-    initialState,
+    initialState: getInitialState(),
     reducers: {
         setPhase(state, action) {
             state.phase = action.payload;
@@ -57,7 +54,6 @@ const gameSlice = createSlice({
             state.score = action.payload;
         },
 
-        // старт гри після розставлення кораблів
         startGameWithShips(state, action) {
             resetAIMemory();
 
@@ -75,32 +71,27 @@ const gameSlice = createSlice({
             state.currentTurn = "player";
         },
 
-        // почати ту саму гру з тією ж розкладкою
         restartGame(state) {
             resetAIMemory();
 
-            const sourceShips =
-                state.baselinePlayerShips?.length
-                    ? state.baselinePlayerShips
-                    : state.playerBoard.ships;
-
-            state.phase = GamePhase.GAME;
-            state.currentTurn = "player";
-
-            state.playerBoard = {
-                ships: normalizeShips(deepClone(sourceShips)),
-                hits: {},
-            };
+            if (state.baselinePlayerShips) {
+                const clean = normalizeShips(deepClone(state.baselinePlayerShips));
+                state.playerBoard = {
+                    ships: clean,
+                    hits: {},
+                };
+            }
 
             state.enemyBoard = {
                 ...initialBoardState,
                 ships: normalizeShips(generateAutoPlacement()),
             };
 
+            state.phase = GamePhase.GAME;
+            state.currentTurn = "player";
             state.winner = null;
         },
 
-        // логіка пострілу (гравець або бот)
         takeShot(state, action) {
             const { coord, shooter } = action.payload;
 
@@ -137,7 +128,6 @@ const gameSlice = createSlice({
             }
         },
 
-        // передати хід ворогу, коли в гравця вийшов час
         endPlayerTurn(state) {
             state.currentTurn = "enemy";
         },
@@ -168,7 +158,6 @@ const gameSlice = createSlice({
             state.winner = "enemy";
         },
 
-        // постріл бота — окремий редʼюсер, який використовує AI
         executeEnemyTurn(state, action) {
             const { settings } = action.payload;
             const coord = getEnemyShot(state.playerBoard, settings.aiMode);
@@ -199,7 +188,6 @@ const gameSlice = createSlice({
     },
 });
 
-// middleware: якщо зараз хід бота — через затримку викликаємо executeEnemyTurn
 export const botTurnMiddleware = (store) => (next) => (action) => {
     const result = next(action);
 
@@ -212,16 +200,14 @@ export const botTurnMiddleware = (store) => (next) => (action) => {
         !game.winner
     ) {
         setTimeout(() => {
-            const latestState = store.getState();
-            const { game: g2, settings: s2 } = latestState;
-
+            const latest = store.getState();
             if (
-                g2.phase === GamePhase.GAME &&
-                g2.currentTurn === "enemy" &&
-                !g2.winner
+                latest.game.phase === GamePhase.GAME &&
+                latest.game.currentTurn === "enemy" &&
+                !latest.game.winner
             ) {
                 store.dispatch(
-                    gameSlice.actions.executeEnemyTurn({ settings: s2 })
+                    gameSlice.actions.executeEnemyTurn({ settings: latest.settings })
                 );
             }
         }, settings.enemyDelay || 1000);
