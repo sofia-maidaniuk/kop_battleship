@@ -1,35 +1,89 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./GamePage.module.css";
 import { Grid } from "../components/Grid";
-import { useSettings } from "../context/SettingsContext";
+import { useSelector, useDispatch } from "react-redux";
 import { useGameTimers } from "../hook/useGameTimers";
 import { ResultModal } from "../components/ResultModal";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+    takeShot,
+    restartGame,
+    nextRound,
+    resetScore,
+    surrender,
+    incrementWin,
+    incrementLoss,
+    addRoundToHistory
+} from "../store/gameSlice";
 
-export function GamePage({
-                             onSurrender,
-                             currentTurn,
-                             playerBoard,
-                             enemyBoard,
-                             actions,
-                             winner,
-                             score
-                         }) {
-    const { userId } = useParams();
+export function GamePage() {
     const navigate = useNavigate();
+    const { userId } = useParams();
+    const dispatch = useDispatch();
+
+    const {
+        currentTurn,
+        playerBoard,
+        enemyBoard,
+        winner,
+        score,
+    } = useSelector((state) => state.game);
+
+    const settings = useSelector((state) => state.settings);
 
     const isPlayerTurn = currentTurn === "player";
-    const { settings } = useSettings();
-    const { formatTotalTime, formatTurnTime } = useGameTimers(
-        currentTurn,
-        actions,
-        settings
-    );
+
+    const { formatTotalTime, formatTurnTime, getDurationForHistory } = useGameTimers();
+
+    const [scoreUpdated, setScoreUpdated] = useState(false);
+    const [historySaved, setHistorySaved] = useState(false);
+
+    // ОНОВЛЕННЯ РАХУНКУ
+    useEffect(() => {
+        if (!winner) return;
+
+        if (!scoreUpdated) {
+            if (winner === "player") dispatch(incrementWin());
+            else dispatch(incrementLoss());
+
+            setScoreUpdated(true);
+        }
+    }, [winner, scoreUpdated, dispatch]);
+
+    //ЗАПИС РАУНДУ В ІСТОРІЮ
+    useEffect(() => {
+        if (!winner) return;
+
+        if (!historySaved) {
+            const roundStats = {
+                winner,
+                duration: getDurationForHistory(), // Використовуємо правильну функцію
+                difficulty: settings.difficulty,
+            };
+
+            dispatch(addRoundToHistory(roundStats));
+            setHistorySaved(true);
+        }
+    }, [winner, historySaved, dispatch, settings, getDurationForHistory]);
+
+    // СКИДАННЯ ФЛАГІВ НА НОВУ ГРУ
+    useEffect(() => {
+        if (!winner) {
+            setScoreUpdated(false);
+            setHistorySaved(false);
+        }
+    }, [winner]);
 
     const handleEnemyCellClick = (coord) => {
         if (!isPlayerTurn) return;
         if (enemyBoard.hits[coord]) return;
-        actions.takeShot(coord, "player");
+
+        dispatch(
+            takeShot({
+                coord,
+                shooter: "player",
+            })
+        );
     };
 
     return (
@@ -39,7 +93,7 @@ export function GamePage({
                 <button
                     className={styles.surrenderBtn}
                     onClick={() => {
-                        onSurrender();
+                        dispatch(surrender());
                         navigate(`/user/${userId}/start`);
                     }}
                 >
@@ -59,17 +113,28 @@ export function GamePage({
                 </div>
             </div>
 
-
             <div className={styles.turnIndicator}>
-                <div className={`${styles.playerLabel} ${isPlayerTurn ? "active" : ""}`}>
+                <div
+                    className={`${styles.playerLabel} ${
+                        isPlayerTurn ? "active" : ""
+                    }`}
+                >
                     Player (Ваш хід)
                 </div>
 
-                <div className={`${styles.turnArrow} ${!isPlayerTurn ? styles.enemyArrow : ""}`}>
+                <div
+                    className={`${styles.turnArrow} ${
+                        !isPlayerTurn ? styles.enemyArrow : ""
+                    }`}
+                >
                     ➡
                 </div>
 
-                <div className={`${styles.enemyLabel} ${!isPlayerTurn ? "active" : ""}`}>
+                <div
+                    className={`${styles.enemyLabel} ${
+                        !isPlayerTurn ? "active" : ""
+                    }`}
+                >
                     Enemy (Хід бота)
                 </div>
             </div>
@@ -101,17 +166,18 @@ export function GamePage({
                 winner={winner}
                 score={score}
                 onRestart={() => {
-                    actions.restartGame();
+                    dispatch(restartGame());
                     navigate(`/user/${userId}/game`);
                 }}
                 onNextRound={() => {
-                    actions.nextRound();
+                    dispatch(nextRound());
                     navigate(`/user/${userId}/placement`);
                 }}
                 onExit={() => {
-                    actions.resetScore();
+                    dispatch(resetScore());
                     navigate(`/user/${userId}/start`);
                 }}
+                onViewResults={() => navigate(`/user/${userId}/results`)}
             />
         </div>
     );

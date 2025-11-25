@@ -1,12 +1,12 @@
 import React from "react";
 import styles from "./SettingsPage.module.css";
-import { useSettings } from "../context/SettingsContext";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { updateSettings } from "../store/settingsSlice";
 
-// Схема валідації
 const schema = yup.object().shape({
     difficulty: yup
         .string()
@@ -14,12 +14,13 @@ const schema = yup.object().shape({
         .required("Рівень складності обов’язковий"),
 });
 
-export function SettingsPage({ onStart }) {
-    const { settings, updateSettings } = useSettings();
+export function SettingsPage() {
     const navigate = useNavigate();
     const { userId } = useParams();
+    const dispatch = useDispatch();
 
-    // Ініціалізація форми
+    const settings = useSelector((state) => state.settings);
+
     const {
         register,
         handleSubmit,
@@ -34,10 +35,8 @@ export function SettingsPage({ onStart }) {
 
     const selectedDifficulty = watch("difficulty");
 
-    // Обробка сабміту
     const onSubmit = (data) => {
-        updateSettings({ ...settings, difficulty: data.difficulty });
-        if (onStart) onStart();
+        dispatch(updateSettings({ difficulty: data.difficulty }));
         navigate(`/user/${userId}/placement`);
     };
 
@@ -97,7 +96,8 @@ export function SettingsPage({ onStart }) {
                     <button
                         type="button"
                         className={styles.btnSecondary}
-                        onClick={() => navigate(`/user/${userId}/start`)}>
+                        onClick={() => navigate(`/user/${userId}/start`)}
+                    >
                         Назад
                     </button>
 

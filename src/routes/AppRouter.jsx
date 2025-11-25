@@ -1,75 +1,65 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 
 import { StartPage } from "../pages/StartPage";
 import { SettingsPage } from "../pages/SettingsPage";
 import { ShipPlacementPage } from "../pages/ShipPlacementPage";
 import { GamePage } from "../pages/GamePage";
 import { RulesPage } from "../pages/RulesPage";
+import { ResultsPage } from "../pages/ResultsPage";
+import { setPhase, startGameWithShips, GamePhase } from "../store/gameSlice";
 
-export function AppRouter({ state, actions, userId }) {
+export function AppRouter({ userId }) {
+    const dispatch = useDispatch();
+
     return (
         <Routes>
-
-            {/* Redirect root → старт з dynamic userId */}
             <Route
                 path="/"
                 element={<Navigate to={`/user/${userId}/start`} replace />}
             />
 
-            {/* START PAGE */}
             <Route
                 path="/user/:userId/start"
                 element={
                     <StartPage
-                        onStart={actions.openSettings}
-                        onShowRules={actions.showRules}
+                        onStart={() => dispatch(setPhase(GamePhase.SETTINGS))}
+                        onShowRules={() => dispatch(setPhase(GamePhase.RULES))}
                     />
                 }
             />
 
-            {/* SETTINGS PAGE */}
             <Route
                 path="/user/:userId/settings"
-                element={
-                    <SettingsPage
-                        onStart={() => actions.startPlacement()}
-                    />
-                }
+                element={<SettingsPage />}
             />
 
-            {/* SHIP PLACEMENT PAGE */}
             <Route
                 path="/user/:userId/placement"
                 element={
                     <ShipPlacementPage
-                        onStartBattle={(ships) => actions.startGame(ships)}
+                        onStartBattle={(ships) => {
+                            dispatch(startGameWithShips(ships));
+                        }}
                     />
                 }
             />
 
-            {/* GAME PAGE */}
             <Route
                 path="/user/:userId/game"
-                element={
-                    <GamePage
-                        onSurrender={actions.surrender}
-                        currentTurn={state.currentTurn}
-                        playerBoard={state.playerBoard}
-                        enemyBoard={state.enemyBoard}
-                        actions={actions}
-                        winner={state.winner}
-                        score={state.score}
-                    />
-                }
+                element={<GamePage />}
             />
 
-            {/* RULES PAGE */}
             <Route
                 path="/user/:userId/rules"
                 element={<RulesPage />}
             />
 
-            {/* 404 */}
+            <Route
+                path="/user/:userId/results"
+                element={<ResultsPage />}
+            />
+
             <Route path="*" element={<div>404: Page Not Found</div>} />
         </Routes>
     );

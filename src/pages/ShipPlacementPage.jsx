@@ -5,10 +5,13 @@ import styles from "./ShipPlacementPage.module.css";
 import { generateAutoPlacement } from "../utils/shipUtils";
 import { usePlayerPlacement } from "../hook/usePlayerPlacement";
 import { useNavigate, useParams } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { startGameWithShips } from "../store/gameSlice";
 
-export function ShipPlacementPage({ onStartBattle }) {
+export function ShipPlacementPage() {
     const navigate = useNavigate();
     const { userId } = useParams();
+    const dispatch = useDispatch();
 
     const {
         ships,
@@ -56,7 +59,9 @@ export function ShipPlacementPage({ onStartBattle }) {
             return;
         }
 
-        onStartBattle(ships);
+        // Redux старт гри з кораблями
+        dispatch(startGameWithShips(ships));
+
         navigate(`/user/${userId}/game`);
     };
 

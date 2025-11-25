@@ -1,18 +1,23 @@
 import React from "react";
 import styles from "./StartPage.module.css";
 import { useNavigate, useParams } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setPhase } from "../store/gameSlice";
 
-export function StartPage({ onStart, onShowRules }) {
+export function StartPage() {
     const navigate = useNavigate();
     const { userId } = useParams();
+    const dispatch = useDispatch();
 
     const handleStart = () => {
-        onStart();
+        // Перехід на сторінку налаштувань
+        dispatch(setPhase("settings"));
         navigate(`/user/${userId}/settings`);
     };
 
     const handleRules = () => {
-        onShowRules();
+        // Перехід на сторінку правил
+        dispatch(setPhase("rules"));
         navigate(`/user/${userId}/rules`);
     };
 
@@ -24,6 +29,7 @@ export function StartPage({ onStart, onShowRules }) {
                 <button className={styles.btn} onClick={handleStart}>
                     Почати гру
                 </button>
+
                 <button className={styles.btn} onClick={handleRules}>
                     Правила гри
                 </button>
