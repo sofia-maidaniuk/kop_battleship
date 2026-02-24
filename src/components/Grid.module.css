@@ -1,0 +1,47 @@
+.wrapper {
+    display: inline-block;
+}
+
+/* Верхній рядок з літерами */
+.lettersRow {
+    display: grid;
+    grid-template-columns: 30px repeat(5, 50px);
+    margin-bottom: 4px;
+}
+
+/* Основна зона сітки */
+.gridArea {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+
+/* Рядок */
+.row {
+    display: grid;
+    grid-template-columns: 30px repeat(5, 48px);
+}
+
+/* Літери/цифри */
+.label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #0b3d63;
+}
+
+/* Кутовий пустий блок */
+.corner {
+    width: 30px;
+}
+
+/* Стилі для ворожої/союзної сіточки */
+.enemy {
+    opacity: 0.95;
+}
+
+.ally {
+    opacity: 1;
+}

@@ -1,0 +1,129 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100vw;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+
+.title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 20px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 360px;
+}
+
+.info {
+    max-width: 360px;
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.formGroup select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #cde3ff;
+    border-radius: 10px;
+    font-size: 1rem;
+    background-color: white;
+    transition: 0.2s;
+    outline: none;
+}
+
+.formGroup select:focus {
+    border-color: var(--primary-color);
+}
+
+.error {
+    color: #d62828;
+    font-size: 0.85rem;
+}
+
+/* Summary block */
+.summary {
+    width: 100%;
+    margin-bottom: 25px;
+}
+
+.summary ul {
+    list-style: none;
+    padding: 15px 20px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.easy {
+    background-color: #e6fff4;
+    color: #056e3c;
+    border-left: 5px solid #28a745;
+}
+
+.medium {
+    background-color: #fff6db;
+    color: #b38b00;
+    border-left: 5px solid #ffcc00;
+}
+
+.hard {
+    background-color: #ffe5e2;
+    color: #b71c1c;
+    border-left: 5px solid #dc3545;
+}
+
+/* Buttons */
+.buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    width: 100%;
+}
+
+.btnPrimary,
+.btnSecondary {
+    padding: 10px 24px;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s;
+}
+
+.btnPrimary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btnPrimary:hover {
+    background-color: var(--primary-hover);
+}
+
+.btnSecondary {
+    background-color: #a8c3e5;
+    color: var(--primary-color);
+}
+
+.btnSecondary:hover {
+    background-color: #91b3dc;
+}
