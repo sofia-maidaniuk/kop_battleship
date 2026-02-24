@@ -189,7 +189,7 @@ All third-party dependencies were checked using `license-checker`.
 
 Licensing details are provided in the [LICENSE](./LICENSE) file.
 
-A full dependency license report is available in [LICENSE_REPORT.md](./LICENSE_REPORT.md)
+A full dependency license report is available in [LICENSE_REPORT.md](./license-check-report)
 
 
 ## Author
