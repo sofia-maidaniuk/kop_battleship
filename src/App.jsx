@@ -1,4 +1,5 @@
 import { AppRouter } from "./routes/AppRouter";
+import { GdprConsent } from "./components/GdprConsent";
 
 function App() {
     let userId = localStorage.getItem("userId");
@@ -10,6 +11,7 @@ function App() {
     return (
         <div className="app-container">
             <AppRouter userId={userId} />
+            <GdprConsent />
         </div>
     );
 }
