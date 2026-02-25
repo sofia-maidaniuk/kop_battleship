@@ -177,7 +177,15 @@ Technical documentation and project materials are included in this repository.
 
 ## Privacy Policy (in progress)
 
-The Privacy Policy document will be available in:
+This project includes a GDPR-compliant Privacy Policy.
+
+The full document is available in: [PRIVACY_POLICY.md](https://github.com/sofia-maidaniuk/kop_battleship/blob/docs/privacy-policy/PRIVACY_POLICY.md)
+
+The application:
+- Does not collect personal data 
+- Does not use external servers 
+- Stores data only in browser localStorage 
+- Uses a cookie to store GDPR consent preferences
 
 ---
 
