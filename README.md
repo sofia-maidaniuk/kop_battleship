@@ -181,9 +181,15 @@ The Privacy Policy document will be available in:
 
 ---
 
-## License (in progress)
+## License
 
-This project will be distributed under ...
+This project is distributed under the MIT License.
+
+All third-party dependencies were checked using `license-checker`.
+
+Licensing details are provided in the [LICENSE](./LICENSE) file.
+
+A full dependency license report is available in [dependencies-licenses.txt](./dependencies-licenses.txt)
 
 
 ## Author
