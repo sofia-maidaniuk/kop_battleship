@@ -1,0 +1,165 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px 20px;
+    width: 100%;
+    min-height: 100vh;
+    box-sizing: border-box;
+    background-color: var(--bg-color);
+}
+
+.contentCard {
+    background: white;
+    border: 2px solid #d2e7ff;
+    border-radius: 16px;
+    padding: 40px 50px;
+    max-width: 900px;
+    width: 100%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    box-sizing: border-box;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+    margin-bottom: 30px;
+}
+
+.btn:hover {
+    background-color: var(--primary-hover);
+}
+
+.title {
+    margin: 0 0 10px 0;
+    color: var(--text-color);
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.lastUpdated {
+    text-align: center;
+    color: #666;
+    margin-bottom: 40px;
+    font-style: italic;
+}
+
+.sectionTitle {
+    margin: 40px 0 20px 0;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+    border-bottom: 2px solid #eef5ff;
+    padding-bottom: 10px;
+}
+
+.subSectionTitle {
+    font-size: 1.2rem;
+    margin: 25px 0 10px 0;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.text {
+    color: var(--text-color);
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.list {
+    color: var(--text-color);
+    margin-bottom: 20px;
+    padding-left: 20px;
+    line-height: 1.6;
+}
+
+.listItem {
+    margin-bottom: 8px;
+}
+
+/* Таблиці у стилі вашого додатку */
+.table {
+    width: 100%;
+    background: white;
+    border-collapse: collapse;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+    border: 2px solid #d2e7ff;
+}
+
+.table th {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 15px 10px;
+    font-weight: 600;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.table td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid #eef5ff;
+    color: var(--text-color);
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #f8fbff;
+}
+
+.table tbody tr:hover {
+    background-color: #eef5ff;
+}
+
+/* Адаптивність */
+@media (max-width: 768px) {
+    .page {
+        padding: 20px 15px;
+    }
+
+    .contentCard {
+        padding: 20px;
+    }
+
+    .title {
+        font-size: 2rem;
+        margin-bottom: 20px;
+    }
+
+    .sectionTitle {
+        font-size: 1.3rem;
+        margin: 30px 0 15px 0;
+    }
+
+    .table {
+        font-size: 0.9rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 10px 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
