@@ -1,3 +1,11 @@
+/**
+ * @module Pages/Settings
+ * @description Сторінка налаштувань гри.
+ * Забезпечує вибір рівня складності за допомогою валідованої форми.
+ * Використовує react-hook-form для обробки введення та Yup для валідації.
+ * Обрані налаштування зберігаються в глобальному стейті Redux.
+ */
+
 import React from "react";
 import styles from "./SettingsPage.module.css";
 import { useForm } from "react-hook-form";
@@ -7,6 +15,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { updateSettings } from "../store/settingsSlice";
 
+/**
+ * Схема валідації для форми налаштувань.
+ * Перевіряє, чи обрано один із допустимих рівнів складності.
+ * @constant {Object} schema
+ */
 const schema = yup.object().shape({
     difficulty: yup
         .string()
@@ -14,13 +27,25 @@ const schema = yup.object().shape({
         .required("Рівень складності обов’язковий"),
 });
 
+/**
+ * Компонент SettingsPage.
+ * * @component
+ * @description Рендерить форму налаштувань. При зміні значення у випадаючому списку
+ * динамічно відображає опис обраного рівня (час на хід, поведінка бота).
+ * * @returns {JSX.Element} Сторінка з формою налаштувань та динамічним прев'ю складності.
+ */
 export function SettingsPage() {
     const navigate = useNavigate();
     const { userId } = useParams();
     const dispatch = useDispatch();
 
+    /** @type {Object} Поточні налаштування з Redux-стейту */
     const settings = useSelector((state) => state.settings);
 
+    /**
+     * Ініціалізація форми з використанням react-hook-form.
+     * Використовує yupResolver для інтеграції схеми валідації.
+     */
     const {
         register,
         handleSubmit,
@@ -33,8 +58,15 @@ export function SettingsPage() {
         },
     });
 
+    /** @type {string} Значення обраної складності, що відстежується в реальному часі для UI-підказок */
     const selectedDifficulty = watch("difficulty");
 
+    /**
+     * Обробник відправки форми.
+     * Оновлює глобальні налаштування та перенаправляє користувача на етап розстановки кораблів.
+     * @function onSubmit
+     * @param {Object} data - Дані форми (об'єкт із полем difficulty).
+     */
     const onSubmit = (data) => {
         dispatch(updateSettings({ difficulty: data.difficulty }));
         navigate(`/user/${userId}/placement`);
@@ -43,6 +75,8 @@ export function SettingsPage() {
     return (
         <div className={styles.page}>
             <h1 className={styles.title}>Налаштування гри</h1>
+
+            {/*  */}
 
             <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
                 <div className={styles.info}>
@@ -61,11 +95,13 @@ export function SettingsPage() {
                         <option value="hard">Важкий</option>
                     </select>
 
+                    {/* Повідомлення про помилки валідації */}
                     {errors.difficulty && (
                         <p className={styles.error}>{errors.difficulty.message}</p>
                     )}
                 </div>
 
+                {/* Динамічний опис параметрів складності */}
                 {selectedDifficulty && (
                     <div className={styles.summary}>
                         {selectedDifficulty === "easy" && (

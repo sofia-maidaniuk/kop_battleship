@@ -1,10 +1,24 @@
+/**
+ * @module Store/Main
+ * @description Конфігурація Redux Store для гри "Морський бій".
+ * Об'єднує редьюсери, налаштовує Middleware для логіки бота та забезпечує
+ * автоматичну синхронізацію стану гри з LocalStorage.
+ */
+
 import { configureStore } from "@reduxjs/toolkit";
 import settingsReducer from "./settingsSlice";
 import gameReducer, { botTurnMiddleware } from "./gameSlice";
 
+/** @constant {string} Ключ, за яким стан гри зберігається в LocalStorage */
 const GAME_STORAGE_KEY = "battleship-game-state";
 
-// Завантаження стану гри з localStorage
+/**
+ * Завантажує збережений стан гри з LocalStorage.
+ * Виконує перевірку наявності необхідних полів (history, currentRound) для забезпечення
+ * зворотної сумісності даних.
+ * * @function loadGameState
+ * @returns {Object|undefined} Повертає об'єкт стану або undefined, якщо дані відсутні або пошкоджені.
+ */
 function loadGameState() {
     try {
         const saved = localStorage.getItem(GAME_STORAGE_KEY);
@@ -12,7 +26,7 @@ function loadGameState() {
 
         const parsedState = JSON.parse(saved);
 
-        // ДОДАНО: переконатися, що history існує в завантаженому стані
+        // Перевірка та ініціалізація обов'язкових полів історії для уникнення помилок рендерингу
         if (parsedState.game && !parsedState.game.history) {
             parsedState.game.history = [];
         }
@@ -27,7 +41,11 @@ function loadGameState() {
     }
 }
 
-// Middleware для збереження стану гри
+/**
+ * Middleware для автоматичного збереження стану гри.
+ * Після кожної успішної дії (action) серіалізує поточний стан у JSON та записує в LocalStorage.
+ * * @param {Object} store - Redux Store.
+ */
 const saveGameStateMiddleware = (store) => (next) => (action) => {
     const result = next(action);
 
@@ -47,7 +65,14 @@ const saveGameStateMiddleware = (store) => (next) => (action) => {
     return result;
 };
 
-// Створення Redux Store
+/**
+ * Головний об'єкт Redux Store.
+ * @constant {Object} store
+ * * Конфігурація включає:
+ * - Reducers: керування ігровою логікою та налаштуваннями.
+ * - Preloaded State: відновлення сесії з LocalStorage.
+ * - Middleware: логіка ШІ (botTurnMiddleware) та персистентність (saveGameStateMiddleware).
+ */
 export const store = configureStore({
     reducer: {
         settings: settingsReducer,

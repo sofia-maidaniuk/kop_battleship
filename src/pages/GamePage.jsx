@@ -1,3 +1,10 @@
+/**
+ * @module Pages/Game
+ * @description Основна сторінка ігрового процесу "Морський бій".
+ * Координує взаємодію між гравцем та ШІ, відображає ігрові поля,
+ * керує таймерами та обробляє завершення гри (запис результатів, оновлення рахунку).
+ */
+
 import React, { useState, useEffect } from "react";
 import styles from "./GamePage.module.css";
 import { Grid } from "../components/Grid";
@@ -16,11 +23,22 @@ import {
     addRoundToHistory
 } from "../store/gameSlice";
 
+/**
+ * Компонент сторінки гри.
+ * * @component
+ * @description Виконує роль контейнера для ігрової логіки:
+ * - Слідкує за чергою ходів.
+ * - Оновлює глобальний рахунок перемог/поразок.
+ * - Зберігає статистику раундів в історію.
+ * - Керує відображенням модального вікна результатів.
+ * * @returns {JSX.Element} Рендерить ігровий інтерфейс із двома полями та панеллю приладів.
+ */
 export function GamePage() {
     const navigate = useNavigate();
     const { userId } = useParams();
     const dispatch = useDispatch();
 
+    /** @type {Object} Дані з ігрового стейту Redux */
     const {
         currentTurn,
         playerBoard,
@@ -29,16 +47,24 @@ export function GamePage() {
         score,
     } = useSelector((state) => state.game);
 
+    /** @type {Object} Налаштування складності та таймерів */
     const settings = useSelector((state) => state.settings);
 
+    /** @type {boolean} Прапор, що вказує, чи зараз хід активного гравця */
     const isPlayerTurn = currentTurn === "player";
 
+    /** Отримання форматованого часу та методів розрахунку тривалості з хука */
     const { formatTotalTime, formatTurnTime, getDurationForHistory } = useGameTimers();
 
+    /** Стан для уникнення дублювання оновлення рахунку. @type {Array} */
     const [scoreUpdated, setScoreUpdated] = useState(false);
+    /** Стан для уникнення дублювання запису в історію. @type {Array} */
     const [historySaved, setHistorySaved] = useState(false);
 
-    // ОНОВЛЕННЯ РАХУНКУ
+    /**
+     * Ефект для оновлення рахунку перемог/поразок.
+     * Спрацьовує один раз при визначенні переможця.
+     */
     useEffect(() => {
         if (!winner) return;
 
@@ -50,14 +76,17 @@ export function GamePage() {
         }
     }, [winner, scoreUpdated, dispatch]);
 
-    //ЗАПИС РАУНДУ В ІСТОРІЮ
+    /**
+     * Ефект для запису завершеного раунду в історію.
+     * Розраховує тривалість гри та фіксує рівень складності.
+     */
     useEffect(() => {
         if (!winner) return;
 
         if (!historySaved) {
             const roundStats = {
                 winner,
-                duration: getDurationForHistory(), // Використовуємо правильну функцію
+                duration: getDurationForHistory(),
                 difficulty: settings.difficulty,
             };
 
@@ -66,7 +95,9 @@ export function GamePage() {
         }
     }, [winner, historySaved, dispatch, settings, getDurationForHistory]);
 
-    // СКИДАННЯ ФЛАГІВ НА НОВУ ГРУ
+    /**
+     * Скидає локальні прапори оновлення при початку нового раунду (коли winner стає null).
+     */
     useEffect(() => {
         if (!winner) {
             setScoreUpdated(false);
@@ -74,6 +105,11 @@ export function GamePage() {
         }
     }, [winner]);
 
+    /**
+     * Обробник кліку по ворожому полю.
+     * Виконує постріл гравця, якщо зараз його хід і клітинка ще не була атакована.
+     * * @param {string} coord - Координата цілі (напр. "Б3").
+     */
     const handleEnemyCellClick = (coord) => {
         if (!isPlayerTurn) return;
         if (enemyBoard.hits[coord]) return;
@@ -101,6 +137,7 @@ export function GamePage() {
                 </button>
             </div>
 
+            {/* Панель таймерів */}
             <div className={styles.timePanel}>
                 <div className={styles.timerCard}>
                     <div className={styles.timerLabel}>Загальний час</div>
@@ -113,6 +150,7 @@ export function GamePage() {
                 </div>
             </div>
 
+            {/* Індикатор черговості ходу */}
             <div className={styles.turnIndicator}>
                 <div
                     className={`${styles.playerLabel} ${
@@ -139,6 +177,7 @@ export function GamePage() {
                 </div>
             </div>
 
+            {/* Ігрові поля */}
             <div className={styles.boardsContainer}>
                 <div className={styles.boardSection}>
                     <h2>Моє поле</h2>
@@ -162,6 +201,7 @@ export function GamePage() {
                 </div>
             </div>
 
+            {/* Модальне вікно фіналу */}
             <ResultModal
                 winner={winner}
                 score={score}

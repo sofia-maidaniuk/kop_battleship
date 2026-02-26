@@ -1,6 +1,16 @@
+/**
+ * @module Utils/GameLogic
+ * @description Допоміжні функції для обробки ігрових координат, розрахунку позицій кораблів та логіки пострілів.
+ */
+
 import { GRID_SIZE, LETTERS } from "../constants/gameConstants";
 
-//Перетворює координату на матричні індекси { row: number, col: number }.
+/**
+ * Перетворює строкову координату (напр. "A1") у матричні індекси об'єкта.
+ * * @function coordToMatrix
+ * @param {string} coord - Координата у форматі "БукваЧисло" (напр. "B5").
+ * @returns {{row: number, col: number}} Об'єкт із нульовими індексами рядка та стовпця.
+ */
 export const coordToMatrix = (coord) => {
     const letter = coord[0];
     const number = parseInt(coord.slice(1), 10);
@@ -9,8 +19,13 @@ export const coordToMatrix = (coord) => {
     return { row, col };
 };
 
-//Перетворює матричні індекси на координату
-//Повертає null, якщо індекси виходять за межі сітки.
+/**
+ * Перетворює числові матричні індекси назад у строкову координату.
+ * * @function matrixToCoord
+ * @param {number} row - Індекс рядка (0-9).
+ * @param {number} col - Індекс стовпця (0-9).
+ * @returns {string|null} Строкова координата (напр. "C3") або null, якщо індекси поза межами поля.
+ */
 export const matrixToCoord = (row, col) => {
     if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) {
         return null;
@@ -18,8 +33,14 @@ export const matrixToCoord = (row, col) => {
     return `${LETTERS[col]}${row + 1}`;
 };
 
-//Генерує всі координати корабля, виходячи з початкової клітинки, орієнтації та розміру
-//Повертає null, якщо корабель виходить за межі сітки
+/**
+ * Генерує всі координати, які займає корабель, на основі його параметрів.
+ * * @function getShipPositions
+ * @param {string} startCoord - Початкова клітинка (голова корабля).
+ * @param {string} orientation - Орієнтація ('horizontal' або 'vertical').
+ * @param {number} size - Довжина корабля.
+ * @returns {string[]|null} Масив координат або null, якщо корабель виходить за межі сітки.
+ */
 export const getShipPositions = (startCoord, orientation, size) => {
     const { row: startR, col: startC } = coordToMatrix(startCoord);
     const positions = [];
@@ -43,8 +64,13 @@ export const getShipPositions = (startCoord, orientation, size) => {
     return positions;
 };
 
-//Отримує всі сусідні координати (включно з діагоналями) для однієї клітинки.
-
+/**
+ * Знаходить усі сусідні клітинки навколо вказаної координати (включаючи діагоналі).
+ * Використовується для розрахунку зон безпеки навколо кораблів.
+ * * @function getNeighbors
+ * @param {string} coord - Центральна координата.
+ * @returns {string[]} Масив унікальних координат-сусідів.
+ */
 export const getNeighbors = (coord) => {
     const { row, col } = coordToMatrix(coord);
     const neighbors = new Set();
@@ -62,7 +88,14 @@ export const getNeighbors = (coord) => {
     return Array.from(neighbors);
 }
 
-//Перевіряє, чи можна безпечно розмістити новий корабель, враховуючи правило про не торкання кутами чи бортами
+/**
+ * Перевіряє, чи можна розмістити корабель у вказаних позиціях.
+ * Перевірка базується на правилах: кораблі не можуть перетинатися або торкатися кутами/бортами.
+ * * @function isPlacementValid
+ * @param {string[]} newShipPositions - Координати нового корабля.
+ * @param {Array} existingShips - Масив уже розміщених об'єктів кораблів.
+ * @returns {Object} Об'єкт із результатом перевірки (містить valid та необов'язковий reason).
+ */
 export const isPlacementValid = (newShipPositions, existingShips) => {
     if (!newShipPositions || newShipPositions.length === 0) return { valid: false, reason: "Невірні позиції" };
 
@@ -86,6 +119,14 @@ export const isPlacementValid = (newShipPositions, existingShips) => {
     return { valid: true };
 };
 
+/**
+ * Обробляє логіку пострілу по масиву кораблів.
+ * Визначає влучання, потоплення конкретного корабля та завершення гри.
+ * * @function processShot
+ * @param {string} coord - Координата пострілу.
+ * @param {Array} ships - Поточний стан масиву кораблів.
+ * @returns {Object} Результат пострілу: {isHit, updatedShips, isSunk, allSunk, sunkShipPositions}.
+ */
 export const processShot = (coord, ships) => {
     let isHit = false;
     let sunkShipPositions = []; // для збору клітинок потоплених кораблів
