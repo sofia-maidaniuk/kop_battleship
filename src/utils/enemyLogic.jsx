@@ -1,14 +1,29 @@
+/**
+ * @module AI/Logic
+ * @description Модуль, що містить алгоритми штучного інтелекту для гри "Морський бій".
+ * Включає логіку випадкових пострілів, полювання на підбитий корабель та розумне оминання сусідніх клітинок.
+ */
+
 import { GRID_SIZE, LETTERS } from "../constants/gameConstants";
 import { getNeighbors } from "./gameLogicUtils";
 
-// глобальний стан бота
+/** @type {string|null} Початкова клітинка, з якої почалося влучання в поточний корабель */
 let baseHit = null;
+/** @type {string|null} Поточний напрямок пострілів (up, down, left, right) */
 let currentDirection = null;
+/** @type {Set<string>} Напрямки, які вже були перевірені навколо baseHit */
 let triedDirections = new Set();
+/** @type {string|null} Остання клітинка, де було зафіксовано влучання при цілеспрямованому обстрілі */
 let lastDirectionalHit = null;
+/** @type {string[]} Масив усіх успішних влучань у поточний корабель */
 let successfulHits = [];
+/** @type {string|null} Зафіксована вісь корабля (vertical або horizontal) */
 let lockedAxis = null;
 
+/**
+ * Скидає пам'ять AI. Викликається після повного потоплення корабля або початку нової гри.
+ * @function resetAIMemory
+ */
 export function resetAIMemory() {
     baseHit = null;
     currentDirection = null;
@@ -18,7 +33,13 @@ export function resetAIMemory() {
     lockedAxis = null;
 }
 
-// наступна клітинка у напрямку
+/**
+ * Розраховує наступну клітинку у заданому напрямку від поточної.
+ * * @function getNextInDirection
+ * @param {string} coord - Поточна координата (напр. "A1").
+ * @param {string} direction - Напрямок ("up", "down", "left", "right").
+ * @returns {string|null} Нова координата або null, якщо вихід за межі поля.
+ */
 function getNextInDirection(coord, direction) {
     const col = coord[0];
     const row = parseInt(coord.slice(1), 10);
@@ -38,12 +59,22 @@ function getNextInDirection(coord, direction) {
     }
 }
 
+/**
+ * Повертає протилежний напрямок до заданого.
+ * @param {string} direction - Поточний напрямок.
+ * @returns {string} Протилежний напрямок.
+ */
 function getOppositeDirection(direction) {
     const opposites = { up: "down", down: "up", left: "right", right: "left" };
     return opposites[direction];
 }
 
-// визначити вісь за двома хітами
+/**
+ * Визначає вісь розміщення корабля на основі двох точок влучання.
+ * * @param {string} a - Перша координата.
+ * @param {string} b - Друга координата.
+ * @returns {string|null} "vertical", "horizontal" або null.
+ */
 function detectAxis(a, b) {
     const rowA = parseInt(a.slice(1), 10);
     const rowB = parseInt(b.slice(1), 10);
@@ -55,7 +86,12 @@ function detectAxis(a, b) {
     return null;
 }
 
-// визначити напрямок за двома хітами
+/**
+ * Визначає векторний напрямок між двома клітинками.
+ * * @param {string} from - Початкова координата.
+ * @param {string} to - Кінцева координата.
+ * @returns {string|null} Напрямок руху.
+ */
 function detectDirection(from, to) {
     const rowFrom = parseInt(from.slice(1), 10);
     const rowTo = parseInt(to.slice(1), 10);
@@ -71,11 +107,20 @@ function detectDirection(from, to) {
     return null;
 }
 
+/**
+ * Основна функція для отримання пострілу AI. Підтримує три режими складності.
+ * * @function getEnemyShot
+ * @param {Object} playerBoard - Об'єкт поля гравця.
+ * @param {string} [aiMode="random"] - Режим складності: "random" (легкий), "target" (середній), "smart" (важкий).
+ * @returns {string|null} Обрана координата для пострілу.
+ */
 export function getEnemyShot(playerBoard, aiMode = "random") {
     const alreadyShot = Object.keys(playerBoard.hits);
     let possibleShots = [];
 
-    // легкий
+    /**
+     * ЛЕГКИЙ РЕЖИМ: Повністю випадковий вибір клітинки серед тих, куди ще не стріляли.
+     */
     const randomShot = () => {
         for (let c = 0; c < GRID_SIZE; c++) {
             for (let r = 1; r <= GRID_SIZE; r++) {
@@ -87,7 +132,10 @@ export function getEnemyShot(playerBoard, aiMode = "random") {
         }
     };
 
-    // середній
+    /**
+     * СЕРЕДНІЙ РЕЖИМ: "Полювання". Якщо є влучання, AI намагається добити корабель,
+     * визначаючи його вісь та напрямок.
+     */
     const targetShot = () => {
         const hits = Object.keys(playerBoard.hits).filter(
             (c) => playerBoard.hits[c] === "hit"
@@ -196,7 +244,10 @@ export function getEnemyShot(playerBoard, aiMode = "random") {
         randomShot();
     };
 
-    // важкий
+    /**
+     * ВАЖКИЙ РЕЖИМ: Окрім полювання, AI знає, що кораблі не можуть стояти впритул,
+     * тому ігнорує клітинки навколо вже потоплених кораблів.
+     */
     const smartShot = () => {
         const sunkCells = Object.keys(playerBoard.hits).filter(
             (c) => playerBoard.hits[c] === "sunk"
@@ -228,7 +279,6 @@ export function getEnemyShot(playerBoard, aiMode = "random") {
         }
     };
 
-    // вибір режиму
     switch (aiMode) {
         case "target":
             targetShot();

@@ -1,11 +1,27 @@
+/**
+ * @module Hooks/useGameTimers
+ * @description Кастомний хук для керування часовими лімітами гри Battleship.
+ * Забезпечує роботу загального таймера раунду та таймера ходу гравця.
+ * Реалізує персистентність (збереження стану) через LocalStorage, щоб час не скидався при оновленні сторінки.
+ */
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { endPlayerTurn, surrender } from "../store/gameSlice";
 
+/** @constant {string} Ключ LocalStorage для загального часу гри */
 const LS_TOTAL = "battle_total_time";
+/** @constant {string} Ключ LocalStorage для часу поточного ходу */
 const LS_TURN = "battle_turn_time";
+/** @constant {string} Ключ LocalStorage для мітки часу початку гри */
 const LS_START_TIME = "battle_start_time";
 
+/**
+ * Хук useGameTimers.
+ * * @function useGameTimers
+ * @returns {Object} Об'єкт із часовими станами та методами форматування:
+ * { turnTime, totalTime, formatTurnTime, formatTotalTime, getDurationForHistory, getElapsedTime }
+ */
 export function useGameTimers() {
     const dispatch = useDispatch();
 
@@ -14,28 +30,46 @@ export function useGameTimers() {
     const winner = useSelector((state) => state.game.winner);
     const phase = useSelector((state) => state.game.phase);
 
+    /** @type {Object} Референс для зберігання початкового налаштованого часу */
     const initialTotalTime = useRef(settings.totalTime * 60);
 
+    /**
+     * Допоміжна функція для завантаження числових значень зі сховища.
+     * @param {string} key - Ключ у localStorage.
+     * @param {number} fallback - Значення за замовчуванням.
+     * @returns {number}
+     */
     const loadNumber = (key, fallback) => {
         const saved = localStorage.getItem(key);
         return saved !== null ? Number(saved) : fallback;
     };
 
+    /** Стейт загального залишку часу (в секундах). @type {Array} */
     const [totalTime, setTotalTime] = useState(
         loadNumber(LS_TOTAL, settings.totalTime * 60)
     );
 
+    /** Стейт залишку часу на поточний хід (в секундах). @type {Array} */
     const [turnTime, setTurnTime] = useState(
         loadNumber(LS_TURN, settings.turnTimeLimit)
     );
 
+    /**
+     * Форматує секунди у рядок типу "MM:SS".
+     * @param {number} seconds
+     * @returns {string}
+     */
     const formatTime = (seconds) => {
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
         return `${m}:${s.toString().padStart(2, "0")}`;
     };
 
-    // Функція для отримання витраченого часу
+    /**
+     * Розраховує кількість секунд, що пройшли з моменту старту гри.
+     * @function getElapsedTime
+     * @returns {number}
+     */
     const getElapsedTime = useCallback(() => {
         const startTime = localStorage.getItem(LS_START_TIME);
         if (!startTime) return 0;
@@ -43,7 +77,11 @@ export function useGameTimers() {
         return elapsedSeconds;
     }, []);
 
-    // Функція для отримання витраченого часу для історії
+    /**
+     * Розраховує повну тривалість гри для запису в історію після завершення.
+     * @function getDurationForHistory
+     * @returns {number} Секунди тривалості гри.
+     */
     const getDurationForHistory = useCallback(() => {
         if (!winner) return 0;
         const startTime = localStorage.getItem(LS_START_TIME);
@@ -53,7 +91,9 @@ export function useGameTimers() {
         return duration;
     }, [winner]);
 
-    // Ініціалізація часу при початку гри
+    /**
+     * Ефект ініціалізації: встановлює мітку початку гри та початкові значення таймерів.
+     */
     useEffect(() => {
         if (phase === "game" && !localStorage.getItem(LS_START_TIME)) {
             const startTime = Date.now();
@@ -68,7 +108,10 @@ export function useGameTimers() {
         }
     }, [phase, settings.totalTime, settings.turnTimeLimit]);
 
-    // Загальний таймер гри
+    /**
+     * Ефект загального ігрового таймера.
+     * При досягненні нуля викликає surrender (поразку).
+     */
     useEffect(() => {
         if (winner) return;
 
@@ -88,7 +131,10 @@ export function useGameTimers() {
         return () => clearInterval(totalTimer);
     }, [totalTime, winner, dispatch]);
 
-    // Таймер ходу
+    /**
+     * Ефект таймера ходу гравця.
+     * При досягненні нуля автоматично передає хід ворогу.
+     */
     useEffect(() => {
         if (winner) return;
         if (currentTurn !== "player") return;
@@ -112,7 +158,9 @@ export function useGameTimers() {
         return () => clearInterval(turnTimer);
     }, [currentTurn, turnTime, winner, dispatch, settings.turnTimeLimit]);
 
-    // Скидання часу на хід при зміні черги
+    /**
+     * Ефект скидання часу на хід при зміні активного гравця.
+     */
     useEffect(() => {
         if (currentTurn === "player" && !winner) {
             const resetValue = settings.turnTimeLimit;
@@ -121,7 +169,9 @@ export function useGameTimers() {
         }
     }, [currentTurn, settings.turnTimeLimit, winner]);
 
-    // Очищення часу при завершенні раунду
+    /**
+     * Очищення LocalStorage після визначення переможця.
+     */
     useEffect(() => {
         if (winner) {
             // Використовуємо setTimeout для відкладеного очищення, щоб getDurationForHistory встиг спрацювати

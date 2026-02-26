@@ -1,6 +1,19 @@
+/**
+ * @module Utils/ShipGeneration
+ * @description Модуль для автоматичної генерації розстановки кораблів та створення об'єктів флоту.
+ */
+
 import { GRID_SIZE, LETTERS, SHIP_TYPES } from "../constants/gameConstants";
 import { getShipPositions, isPlacementValid } from "./gameLogicUtils";
 
+/**
+ * Функція-фабрика для створення об'єкта корабля.
+ * * @function createShip
+ * @param {string[]} positions - Масив координат, які займає корабель (напр. ["A1", "A2"]).
+ * @param {string} [orientation="horizontal"] - Орієнтація корабля.
+ * @param {number} type - Розмір/тип корабля.
+ * @returns {Object} Об'єкт корабля з унікальним ідентифікатором та станом влучань.
+ */
 export const createShip = (positions, orientation = "horizontal", type) => ({
     id: Math.random().toString(36).slice(2, 9),
     positions,
@@ -10,10 +23,16 @@ export const createShip = (positions, orientation = "horizontal", type) => ({
     isSunk: false,
 });
 
-//Генерує список кораблів для поля 5x5 згідно з правилами (1x3, 1x2, 2x1) з рандомним розміщенням, яке не дозволяє кораблям торкатися кутами чи бортами.
-
+/**
+ * Генерує випадкову розстановку кораблів для поля 5x5.
+ * Використовує метод перебору з максимальною кількістю спроб (1000) для кожної одиниці флоту.
+ * Якщо розстановка заходить у глухий кут, функція рекурсивно запускає процес спочатку.
+ * * @function generateRandomPlacement
+ * @returns {Object[]} Масив об'єктів кораблів, розміщених згідно з правилами (без торкання).
+ */
 export const generateRandomPlacement = () => {
     const ships = [];
+    /** @type {number[]} Відсортований за спаданням масив розмірів кораблів (напр. [3, 2, 1, 1]) */
     const shipSizes = Object.values(SHIP_TYPES)
         .flatMap(type => Array(type.count).fill(type.size))
         .sort((a, b) => b - a); // Починаємо з найбільших: [3, 2, 1, 1]
@@ -69,5 +88,8 @@ export const generateRandomPlacement = () => {
     return ships;
 };
 
-// Перевизначаємо placeholder, щоб наші хуки використовували нову логіку:
+/** * Псевдонім для функції generateRandomPlacement.
+ * Використовується для автоматичного розміщення кораблів у компонентах.
+ * @constant
+ */
 export const generateAutoPlacement = generateRandomPlacement;
