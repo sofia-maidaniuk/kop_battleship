@@ -18,6 +18,7 @@ The game allows a player to compete against an AI opponent with multiple difficu
 - [Game Rules](#game-rules)
 - [Features](#features)
 - [Project Structure](#project-structure)
+- [Architecture Overview](#architecture-overview)
 - [Getting Started](#getting-started)
 - [Available Scripts](#available-scripts)
 - [Configuration](#configuration)
@@ -62,7 +63,7 @@ The objective is to sink all enemy ships before the opponent sinks yours.
 
 ---
 
-## Project Structure (in progress)
+## Project Structure 
 ```
 src/
 ├── components/ # Reusable UI components
@@ -113,10 +114,17 @@ npm run dev
 
 ### Available Scripts
 ```bash
-npm run dev       # start development server
-npm run build     # production build
-npm run preview   # preview production build
-npm run lint      # run ESLint
+# Development and launch
+npm run dev           # launch local development server (Vite)
+npm run build         # build project for production
+npm run preview       # preview assembled production build
+
+# Documentation and UI testing
+npm run docs          # generate and update JSDoc documentation
+npm run storybook      # launch Storybook (view Cell and Grid components)
+
+# Code quality
+npm run lint          # check code using ESLint
 ```
 
 ---
@@ -165,17 +173,21 @@ Application routing is defined in: [src/routes/AppRouter.jsx](https://github.com
 
 ---
 
-## Documentation (in progress)
+## Documentation 
 
-Technical documentation and project materials are included in this repository.
+Technical documentation and project workflow are covered in this repository.
+For a better understanding of the architecture and implemented features, please refer to the video demonstration.
 
-🎥 Documentation video:  
-*(Link will be added here)*
-
+🎥 Documentation video: *[Click](https://drive.google.com/file/d/1YSLE1bCZ2OKh_ZIaDJeCUmUYpS9dpmnG/view?usp=drive_link)*
+### What's covered in the video:
+* **Code Documentation (JSDoc):** A walkthrough of the generated technical documentation for components and logic.
+* **Storybook Integration:** Demonstration of UI components (`Cell` and `Grid`) in an isolated environment with various states and configurations.
+* **Storage & Cookies:** Demonstration of how cookies work within the **DevTools**.
+  * Overview of the **Privacy Policy** implementation and its integration with cookie management.
 
 ---
 
-## Privacy Policy (in progress)
+## Privacy Policy 
 
 This project includes a GDPR-compliant Privacy Policy.
 
@@ -197,8 +209,9 @@ All third-party dependencies were checked using `license-checker`.
 
 Licensing details are provided in the [LICENSE](./LICENSE) file.
 
-A full dependency license report is available in [dependencies-licenses.txt](./dependencies-licenses.txt)
+A full dependency license report is available in [LICENSE_REPORT.md](./LICENSE_REPORT)
 
 
 ## Author
-Sofia Maidaniuk  
+Sofiia Maidaniuk  
+email: ipz231_msye@student.ztu.edu.ua
