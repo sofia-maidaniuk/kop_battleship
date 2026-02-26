@@ -1,12 +1,20 @@
 {
   "source": {
     "include": ["src"],
-    "includePattern": ".+\\.jsx?$",
-    "excludePattern": "(^|\\/|\\\\)_"
+    "includePattern": "\\.(jsx|js)$",
+    "excludePattern": "(node_modules/|docs)"
   },
+  "plugins": [
+    "plugins/markdown"
+  ],
   "opts": {
-    "destination": "./docs",
+    "encoding": "utf8",
+    "destination": "docs/",
     "recurse": true,
-    "readme": "./README.md"
+    "template": "node_modules/clean-jsdoc-theme",
+    "theme_opts": {
+      "default_theme": "light",
+      "title": "Документація Морський бій"
+    }
   }
 }
